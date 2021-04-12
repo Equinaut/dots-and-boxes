@@ -1,0 +1,23 @@
+{
+  "name": "dots-and-boxes",
+  "version": "1.0.0",
+  "description": "Dots and boxes game online multiplayer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Equinaut19/dots-and-boxes.git"
+  },
+  "author": "James Cameron",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Equinaut19/dots-and-boxes/issues"
+  },
+  "homepage": "https://github.com/Equinaut19/dots-and-boxes#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.0.1"
+  }
+}
