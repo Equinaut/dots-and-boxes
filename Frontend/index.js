@@ -1,4 +1,4 @@
-const socket = io("http://localhost:3000");
+const socket = io("http://dotsandboxes.jamescameron.me");
 
 let GRID_WIDTH = 5; //Width of the grid in dots
 let GRID_HEIGHT = 5; //Height of the grid in dots
