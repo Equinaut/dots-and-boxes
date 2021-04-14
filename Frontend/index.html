@@ -1,9 +1,23 @@
 <html>
 <head>
-
+<style>
+.unselectable {
+   -moz-user-select: none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+   -ms-user-select: none;
+   user-select: none;
+}
+</style>
 </head>
 <body>
- <h1>Dots and Boxes</h1>
+ <h1 class="unselectable">Dots and Boxes</h1>
+ <div id="boardContainer">
+   <canvas id="board"> </canvas>
+ </div>
+
+<script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+<script src="/index.js"></script>
+
 </body>
-<script src="index.js"></script>
 </html>
