@@ -156,6 +156,8 @@ socket.on("gameJoin", (msg) => {
 
 socket.on("gameStart", (msg) => {
   console.log("Starting game", msg);
+  lines = [];
+  squares = [];
   startGame(msg.width || 5, msg.width || 5);
   PHASE = 2;
 });
