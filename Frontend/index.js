@@ -1,5 +1,10 @@
 const socket = io("http://dotsandboxes.jamescameron.me");
 
+let PHASE = 0;
+//Phase is 0 on menu screen
+//Phase is 1 in waiting room
+//Phase is 2 in game
+
 let GRID_WIDTH = 5; //Width of the grid in dots
 let GRID_HEIGHT = 5; //Height of the grid in dots
 let SQUARE_SIZE = 100; //Distance between dots in pixels
@@ -18,38 +23,6 @@ let selectedPosition; //Position of selected dot
 let lines = []; //Array of line objects
 let squares = [];
 
-class Line { //Class for line object
-  constructor(startPosition, endPosition) {
-    this.startPosition = [startPosition[0],startPosition[1]];
-    this.endPosition = [endPosition[0],endPosition[1]];
-    if (this.startPosition[0]+this.startPosition[1]>this.endPosition[0]+this.endPosition[1]) [this.startPosition, this.endPosition] = [this.endPosition, this.startPosition];
-  }
-  draw() { //Draws the line on the canvas
-    let canvasContext = boardCanvas.getContext("2d");
-    canvasContext.lineWidth = 8;
-    canvasContext.beginPath();
-    canvasContext.moveTo((this.startPosition[0]+0.5)*SQUARE_SIZE, (this.startPosition[1]+0.5)*SQUARE_SIZE);
-    canvasContext.lineTo((this.endPosition[0]+0.5)*SQUARE_SIZE, (this.endPosition[1]+0.5)*SQUARE_SIZE);
-    canvasContext.stroke();
-  }
-  equals(otherLine) { //Checks if a line is identical to the passed in line object
-    return this.startPosition.toString()==otherLine.startPosition.toString() && this.endPosition.toString()==otherLine.endPosition.toString();
-  }
-}
-
-class Square { //Class for square object
-  constructor(topLeft) {
-    this.topLeft = topLeft;
-  }
-  draw() {
-    let canvasContext = boardCanvas.getContext("2d");
-    canvasContext.fillStyle = "green";
-    canvasContext.beginPath();
-    canvasContext.fillRect((this.topLeft[0]+0.5)*SQUARE_SIZE, (this.topLeft[1]+0.5)*SQUARE_SIZE, SQUARE_SIZE + 1, SQUARE_SIZE + 1);
-    canvasContext.fill();
-  }
-}
-
 function createLine(startPosition, endPosition) { //Creates a new line with the given coordinates
   let newLine = new Line(startPosition, endPosition); //New line object
   let doesntExist = true;
@@ -57,56 +30,11 @@ function createLine(startPosition, endPosition) { //Creates a new line with the 
     if (newLine.equals(line)) doesntExist = false; //Finds if the new line already exists
   }
   if (doesntExist) { //If line is new then add to list
-    lines.push(newLine); //Add newLine to lines list
-    //Check if square was formed
-
-    let topLines = [];
-    let bottomLines = [];
-    let rightLines = [];
-    let leftLines = [];
-
-    //Creates new line objects, for each of the lines in all 4 possible squares
-    topLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1] + 1], [newLine.startPosition[0] + 1, newLine.startPosition[1] + 1])); //Bottom
-    topLines.push(new Line([newLine.startPosition[0] + 1, newLine.startPosition[1]],     [newLine.startPosition[0] + 1, newLine.startPosition[1] + 1])); //Right
-    topLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1]],     [newLine.startPosition[0],     newLine.startPosition[1] + 1])); //Left
-    bottomLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1] - 1], [newLine.startPosition[0] + 1, newLine.startPosition[1] - 1])); //Top
-    bottomLines.push(new Line([newLine.startPosition[0] + 1, newLine.startPosition[1]],     [newLine.startPosition[0] + 1, newLine.startPosition[1] - 1])); //Right
-    bottomLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1]],     [newLine.startPosition[0],     newLine.startPosition[1] - 1])); //Left
-    rightLines.push(new Line([newLine.startPosition[0] - 1, newLine.startPosition[1]],     [newLine.startPosition[0] - 1,     newLine.startPosition[1] + 1])); //Left
-    rightLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1]],     [newLine.startPosition[0] - 1,     newLine.startPosition[1]])); //Top
-    rightLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1] + 1], [newLine.startPosition[0] - 1,     newLine.startPosition[1] + 1])); //Bottom
-    leftLines.push(new Line([newLine.startPosition[0] + 1, newLine.startPosition[1]],     [newLine.startPosition[0] + 1,     newLine.startPosition[1] + 1])); //Right
-    leftLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1]],     [newLine.startPosition[0] + 1,     newLine.startPosition[1]])); //Top
-    leftLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1] + 1], [newLine.startPosition[0] + 1,     newLine.startPosition[1] + 1])); //Bottom
-
-    let foundLinesTop = [false, false, false]; //Which of each of the 3 other lines are found when searching
-    let foundLinesBottom = [false, false, false];
-    let foundLinesRight = [false, false, false];
-    let foundLinesLeft = [false, false, false];
-
-    for (let i=0; i<3; i++) {
-      for (let line of lines) {
-        if (line.equals(topLines[i])) foundLinesTop[i] = true;
-        if (line.equals(bottomLines[i])) foundLinesBottom[i] = true;
-        if (line.equals(rightLines[i])) foundLinesRight[i] = true;
-        if (line.equals(leftLines[i])) foundLinesLeft[i] = true;
-
-        if (foundLinesTop[i] && foundLinesBottom[i] && foundLinesRight[i] && foundLinesLeft[i]) break;
-      }
-    }
-    if (newLine.endPosition[1]==newLine.startPosition[1]) { //Horizontal line
-      if (foundLinesTop.toString() == [true, true, true].toString()) squares.push(new Square(newLine.startPosition));
-      if (foundLinesBottom.toString() == [true, true, true].toString()) squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1] - 1]));
-    } else { //Vertical line
-      if (foundLinesRight.toString() == [true, true, true].toString()) squares.push(new Square([newLine.startPosition[0] - 1, newLine.startPosition[1]]));
-      if (foundLinesLeft.toString() == [true, true, true].toString()) squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1]]));
-    }
+    socket.emit("move", newLine.startPosition, newLine.endPosition);
   }
-
   delete newLine; //Deletes new line object
   return doesntExist; //Returns boolean, if the new line was created or not
 }
-
 
 function startGame(boardWidth, boardHeight) { //Function called whenever a game begins
   GRID_WIDTH = boardWidth;
@@ -153,6 +81,22 @@ function drawGrid() {
   }
 }
 
+function draw() {
+  for (let element of document.getElementsByClassName("section")) {
+    if (PHASE==0 && element.classList.contains("JoinMenu")) element.hidden = false;
+    else if (PHASE==1 && element.classList.contains("WaitingRoom")) element.hidden = false;
+    else if (PHASE==2 && element.classList.contains("Game")) element.hidden = false;
+    else element.hidden = true;
+  }
+  if (PHASE == 0) {
+
+  } else if (PHASE == 1) {
+
+  } else if (PHASE == 2) {
+    drawGrid();
+  }
+}
+
 startGame(GRID_WIDTH, GRID_HEIGHT); //Start game
 
 document.getElementById("board").addEventListener("mousemove", (mouseEvent) => {
@@ -186,7 +130,45 @@ document.getElementById("board").addEventListener("mouseup", (mouseEvent) => {
   }
 }); //End of mouse drag, new line will be created if valid
 
+function joinGame() {
+  let code = document.getElementById("gameIdInput").value;
+  document.getElementById("gameIdInput").value = "";
+  console.log(code);
+  socket.emit("joinGame", code);
+}
 
+function leave() {
+  socket.emit("leave");
+}
+function startGameButton() {
+  socket.emit("gameStart");
+}
 
+socket.on("gameEnd", () => {
+  PHASE = 0;
+  console.log("Game ended");
+});
 
-setInterval(drawGrid, 5); //Calls the draw function every 5 ms
+socket.on("gameJoin", (msg) => {
+  if (msg.success) PHASE = 1;
+  else alert(msg.errorMessage || "Unknown error");
+});
+
+socket.on("gameStart", (msg) => {
+  console.log("Starting game", msg);
+  startGame(msg.width || 5, msg.width || 5);
+  PHASE = 2;
+});
+
+socket.on("gameState", (msg) => {
+  console.log("Gamestate received");
+  let newLines = [];
+  let newSquares = [];
+  for (let line of msg.lines) newLines.push(new Line(line.startPosition, line.endPosition));
+  for (let square of msg.squares) newSquares.push(new Square(square.topLeft));
+  lines = newLines;
+  squares = newSquares;
+  console.log(msg.lines, msg.squares);
+});
+
+setInterval(draw, 5); //Calls the draw function every 5 ms
