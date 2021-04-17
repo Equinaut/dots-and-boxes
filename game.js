@@ -7,9 +7,10 @@ class Game {
     this.lines = [];
     this.squares = [];
     this.players = [];
+    this.currentTurn = 0;
   }
 
-  createLine(startPosition, endPosition) { //Creates a new line with the given coordinates
+  createLine(startPosition, endPosition, playerNumber) { //Creates a new line with the given coordinates
     let newLine = new Line(startPosition, endPosition); //New line object
     if (!(Math.abs(startPosition[0]-endPosition[0])+Math.abs(startPosition[1]-endPosition[1])==1)) return false; //Lines can only connect from each dot to adjacent dots, and not diagonal, length must be 1
     let doesntExist = true;
@@ -55,16 +56,31 @@ class Game {
         }
       }
       if (newLine.endPosition[1]==newLine.startPosition[1]) { //Horizontal line
-        if (foundLinesTop.toString() == [true, true, true].toString()) this.squares.push(new Square(newLine.startPosition));
-        if (foundLinesBottom.toString() == [true, true, true].toString()) this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1] - 1]));
+        if (foundLinesTop.toString() == [true, true, true].toString()) this.squares.push(new Square(newLine.startPosition, playerNumber));
+        if (foundLinesBottom.toString() == [true, true, true].toString()) this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1] - 1], playerNumber));
       } else { //Vertical line
-        if (foundLinesRight.toString() == [true, true, true].toString()) this.squares.push(new Square([newLine.startPosition[0] - 1, newLine.startPosition[1]]));
-        if (foundLinesLeft.toString() == [true, true, true].toString()) this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1]]));
+        if (foundLinesRight.toString() == [true, true, true].toString()) this.squares.push(new Square([newLine.startPosition[0] - 1, newLine.startPosition[1]], playerNumber));
+        if (foundLinesLeft.toString() == [true, true, true].toString()) this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1]], playerNumber));
       }
+      if (!(newLine.endPosition[1]==newLine.startPosition[1] && (foundLinesTop.toString()    == [true, true, true].toString() ||
+          foundLinesBottom.toString() == [true, true, true].toString()) ||
+          newLine.endPosition[1]!=newLine.startPosition[1] && (foundLinesRight.toString()  == [true, true, true].toString() ||
+          foundLinesLeft.toString()   == [true, true, true].toString()))) {
+            this.currentTurn = (this.currentTurn+1)%this.players.length;
+       }
+       console.log(foundLinesTop,foundLinesBottom,foundLinesRight,foundLinesLeft);
+
     }
     console.log(this.lines);
     console.log(this.squares);
     return doesntExist; //Returns boolean, if the new line was created or not
+  }
+  updatePlayerNames() {
+    let players = [];
+    for (let player of this.players) {
+      players.push({name: player.name, number: player.number, colour: player.colour});
+    }
+    return players;
   }
 }
 class Line { //Class for line object
@@ -85,16 +101,11 @@ class Line { //Class for line object
     return this.startPosition.toString()==otherLine.startPosition.toString() && this.endPosition.toString()==otherLine.endPosition.toString();
   }
 }
+
 class Square { //Class for square object
-  constructor(topLeft) {
+  constructor(topLeft, playerNumber) {
     this.topLeft = topLeft;
-  }
-  draw() {
-    let canvasContext = boardCanvas.getContext("2d");
-    canvasContext.fillStyle = "green";
-    canvasContext.beginPath();
-    canvasContext.fillRect((this.topLeft[0]+0.5)*SQUARE_SIZE, (this.topLeft[1]+0.5)*SQUARE_SIZE, SQUARE_SIZE + 1, SQUARE_SIZE + 1);
-    canvasContext.fill();
+    this.player = playerNumber;
   }
 }
 module.exports.Game = Game;

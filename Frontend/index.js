@@ -8,10 +8,10 @@ let PHASE = 0;
 let GRID_WIDTH = 5; //Width of the grid in dots
 let GRID_HEIGHT = 5; //Height of the grid in dots
 let SQUARE_SIZE = 100; //Distance between dots in pixels
-let TOTAL_PLAYERS = 1; //Total number of players in the current game
-let CURRENT_TURN = 0; //Player number of whoevers turn it is
-let PLAYER_NAMES = []; //Name of every player in the game
 
+let allPlayers = [];
+let currentTurn = 0;
+let playerNumber = 0;
 let boardCanvas; //DOM element of HTML canvas
 let mouseX = mouseY = 0; //Mouse X and Y position relative to canvas updated whenever mouse is moved
 let mouseDown = false; //If the mouse is pressed or not
@@ -48,7 +48,7 @@ function startGame(boardWidth, boardHeight) { //Function called whenever a game 
 function drawGrid() {
   if (boardCanvas == null) return; //If there is no canvas element, then return
 
-  SQUARE_SIZE = Math.min((window.innerWidth - document.getElementById("board").getBoundingClientRect().x) / (GRID_WIDTH + 1), (window.innerHeight - document.getElementById("board").getBoundingClientRect().y) / (GRID_HEIGHT + 1));
+  SQUARE_SIZE = Math.min((window.innerWidth) / (GRID_WIDTH + 1), (window.innerHeight) / (GRID_HEIGHT + 1));
   //Set square size based on viewport size
   boardCanvas.width = GRID_WIDTH * SQUARE_SIZE;
   boardCanvas.height = GRID_HEIGHT * SQUARE_SIZE; //Change size of canvas
@@ -69,7 +69,7 @@ function drawGrid() {
     }
   }
 
-  if (mouseDown) { //Draw example line when mouse is being dragged
+  if (mouseDown && currentTurn==playerNumber) { //Draw example line when mouse is being dragged
     let dragEndPosition = [Math.floor(mouseX/SQUARE_SIZE), Math.floor(mouseY/SQUARE_SIZE)]; //End position of mouse drag
     if ((Math.abs(dragStartPosition[0] - dragEndPosition[0]) + Math.abs(dragStartPosition[1] - dragEndPosition[1]) <= 1)) {
       canvasContext.lineWidth = 8;
@@ -117,15 +117,17 @@ document.getElementById("board").addEventListener("mouseup", (mouseEvent) => {
     createLine(dragStartPosition, dragEndPosition);
   } else if (Math.abs(dragStartPosition[0] - dragEndPosition[0]) +  Math.abs(dragStartPosition[1] - dragEndPosition[1]) == 0) {
     //This runs when the mouse is unpressed in the same place that it was pressed
-    if (selected) {
+    if (selected && currentTurn==playerNumber) {
       if (dragEndPosition.toString() == selectedPosition.toString()) selected = false;
       if ((Math.abs(dragEndPosition[0] - selectedPosition[0]) +  Math.abs(dragEndPosition[1] - selectedPosition[1]) == 1)) {
         createLine(selectedPosition, dragEndPosition);
         selected = false;
       }
     } else {
-      selected = true;
-      selectedPosition = dragEndPosition;
+      if (currentTurn==playerNumber) {
+        selected = true;
+        selectedPosition = dragEndPosition;
+      }
     }
   }
 }); //End of mouse drag, new line will be created if valid
@@ -143,6 +145,12 @@ function leave() {
 function startGameButton() {
   socket.emit("gameStart");
 }
+function changeUsername() {
+  let name = document.getElementById("usernameInput").value;
+  document.getElementById("usernameInput").value = "";
+  console.log(name);
+  socket.emit("setName", name);
+}
 
 socket.on("gameEnd", () => {
   PHASE = 0;
@@ -150,7 +158,11 @@ socket.on("gameEnd", () => {
 });
 
 socket.on("gameJoin", (msg) => {
-  if (msg.success) PHASE = 1;
+  if (msg.success) {
+    PHASE = 1;
+    console.log(msg);
+    playerNumber = msg.playerNumber || 0;
+  }
   else alert(msg.errorMessage || "Unknown error");
 });
 
@@ -164,13 +176,57 @@ socket.on("gameStart", (msg) => {
 
 socket.on("gameState", (msg) => {
   console.log("Gamestate received");
+  currentTurn = msg.currentTurn;
   let newLines = [];
   let newSquares = [];
   for (let line of msg.lines) newLines.push(new Line(line.startPosition, line.endPosition));
-  for (let square of msg.squares) newSquares.push(new Square(square.topLeft));
+  for (let square of msg.squares) newSquares.push(new Square(square.topLeft, square.player));
   lines = newLines;
   squares = newSquares;
-  console.log(msg.lines, msg.squares);
+  for (let playerList of document.getElementsByClassName("playerList")) {
+    for (let i=0; i<playerList.childElementCount; i++) {
+      if (i==currentTurn) playerList.children[i].classList.add("currentTurn");
+      else playerList.children[i].classList.remove("currentTurn");
+    }
+  }
+  if (currentTurn == playerNumber) {
+    document.getElementById("playerTurn").innerText="Your turn";
+    document.getElementById("playerTurn").classList.add("currentTurn");
+  } else {
+    selected = false;
+    document.getElementById("playerTurn").innerText="Waiting for other players";
+    document.getElementById("playerTurn").classList.remove("currentTurn");
+  }
+
+  console.log(msg);
+});
+
+socket.on("playerList", (players) => {
+  allPlayers = players;
+  let playerListElements = document.getElementsByClassName("playerList");
+  for (let element of playerListElements) element.innerHTML = "";
+  for (let player of players) {
+    for (let element of playerListElements) {
+      let newPlayerRow = document.createElement("div");
+      newPlayerRow.style.display="flex";
+      let newPlayer = document.createElement("p");
+      newPlayer.innerText = (player.number+1)+". "+player.name;
+      newPlayerRow.classList.add("player");
+      let colourSample = document.createElement("div");
+      colourSample.style.background=player.colour;
+      colourSample.style.border="solid 5px"
+      colourSample.style.width="50px";
+      colourSample.style.height="50px";
+      newPlayerRow.style.margin="-3px 10px 0 10px";
+      newPlayerRow.style.border="solid 3px";
+      newPlayer.style.padding="5px";
+      newPlayerRow.appendChild(newPlayer);
+      newPlayerRow.appendChild(colourSample);
+      element.appendChild(newPlayerRow);
+
+    }
+
+  }
 });
 
 setInterval(draw, 5); //Calls the draw function every 5 ms

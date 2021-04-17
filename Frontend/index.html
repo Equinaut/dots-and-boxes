@@ -8,6 +8,18 @@
    -ms-user-select: none;
    user-select: none;
 }
+.player {
+  padding: 10px;
+}
+.currentTurn {
+  background: #92ff45;
+}
+.playerList {
+  margin-top: 40px;
+}
+.playerTurn {
+  padding: 8px;
+}
 </style>
 </head>
 <body>
@@ -17,12 +29,20 @@
  </div>
  <div class="section WaitingRoom" hidden>
    <h3>Waiting Room</h3>
+   <span>Username: </span><input id="usernameInput"></input><button onclick="changeUsername()">Change username</button><br>
    <button onclick="leave()">Leave waiting room</button>
    <button onclick="startGameButton()">Start game</button>
+   <div class="playerList">
+
+   </div>
  </div>
  <div class="section Game" hidden>
+   <p class="playerTurn" id="playerTurn"></p>
    <div id="boardContainer">
      <canvas id="board"> </canvas>
+   </div>
+   <div class="playerList">
+
    </div>
  </div>
 

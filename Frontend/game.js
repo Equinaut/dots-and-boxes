@@ -18,12 +18,13 @@ class Line { //Class for line object
 }
 
 class Square { //Class for square object
-  constructor(topLeft) {
+  constructor(topLeft, playerNumber) {
     this.topLeft = topLeft;
+    this.player = playerNumber;
   }
   draw() {
     let canvasContext = boardCanvas.getContext("2d");
-    canvasContext.fillStyle = "green";
+    canvasContext.fillStyle = allPlayers[this.player].colour || "gray";
     canvasContext.beginPath();
     canvasContext.fillRect((this.topLeft[0]+0.5)*SQUARE_SIZE, (this.topLeft[1]+0.5)*SQUARE_SIZE, SQUARE_SIZE + 1, SQUARE_SIZE + 1);
     canvasContext.fill();
