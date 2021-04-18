@@ -1,0 +1,63 @@
+body {
+  margin: 0;
+  height: 100%;
+}
+.player {
+  padding: 10px;
+}
+.playerList {
+  margin: 2px 0;
+}
+.playerTurn {
+  padding: 8px;
+  background: orange;
+  margin: 0;
+}
+#container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.section {
+  height: 100%;
+}
+.JoinMenu,.WaitingRoom {
+  padding: 25px;
+}
+button {
+  margin: 6px;
+}
+#container2 {
+  display: flex;
+  flex-flow: row wrap;
+  height: 100%;
+  justify-content: space-between;
+}
+
+#sidebar {
+  flex-basis: 300px;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+#mainGame {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 60%;
+  min-width: 200px;
+}
+#board {
+  flex-grow: 1;
+  min-width: 200px;
+  min-height: 200px;
+  margin: 4px;
+}
+.currentTurn {
+  background: #92ff45;
+}
+#titleBar {
+  padding: 20px;
+  margin-bottom: 10px;
+  border-bottom: solid 3px;
+}

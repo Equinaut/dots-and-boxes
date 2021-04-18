@@ -24,6 +24,10 @@ app.get('/index.js', (req, res) => {
   res.sendFile(__dirname + '/Frontend/index.js');
 });
 
+app.get('/style.css', (req, res) => {
+  res.sendFile(__dirname + '/Frontend/style.css');
+});
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/Frontend/index.html');
 });

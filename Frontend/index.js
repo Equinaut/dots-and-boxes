@@ -41,17 +41,16 @@ function startGame(boardWidth, boardHeight) { //Function called whenever a game 
   GRID_HEIGHT = boardHeight;
 
   boardCanvas = document.getElementById("board");
-  boardCanvas.width = GRID_WIDTH * SQUARE_SIZE;
-  boardCanvas.height = GRID_HEIGHT * SQUARE_SIZE;
 }
 
 function drawGrid() {
   if (boardCanvas == null) return; //If there is no canvas element, then return
 
-  SQUARE_SIZE = Math.min((window.innerWidth) / (GRID_WIDTH + 1), (window.innerHeight) / (GRID_HEIGHT + 1));
+  boardCanvas.width  = boardCanvas.offsetWidth;
+  boardCanvas.height = boardCanvas.offsetHeight;
+
   //Set square size based on viewport size
-  boardCanvas.width = GRID_WIDTH * SQUARE_SIZE;
-  boardCanvas.height = GRID_HEIGHT * SQUARE_SIZE; //Change size of canvas
+  SQUARE_SIZE = Math.min(boardCanvas.width / (GRID_WIDTH), boardCanvas.height / (GRID_HEIGHT));
 
   //Draw squares
   for (let square of squares) square.draw(); //Draws every square object
@@ -209,6 +208,7 @@ socket.on("playerList", (players) => {
     for (let element of playerListElements) {
       let newPlayerRow = document.createElement("div");
       newPlayerRow.style.display="flex";
+      newPlayerRow.style.justifyContent = "space-between";
       let newPlayer = document.createElement("p");
       newPlayer.innerText = (player.number+1)+". "+player.name;
       newPlayerRow.classList.add("player");

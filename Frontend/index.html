@@ -1,54 +1,47 @@
 <html>
 <head>
-<style>
-.unselectable {
-   -moz-user-select: none;
-   -khtml-user-select: none;
-   -webkit-user-select: none;
-   -ms-user-select: none;
-   user-select: none;
-}
-.player {
-  padding: 10px;
-}
-.currentTurn {
-  background: #92ff45;
-}
-.playerList {
-  margin-top: 40px;
-}
-.playerTurn {
-  padding: 8px;
-}
-</style>
+<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-<h1 class="unselectable">Dots and Boxes</h1>
- <div class="section JoinMenu">
-   <input id="gameIdInput"> </input><button onclick="joinGame()">Join Game</button>
- </div>
- <div class="section WaitingRoom" hidden>
-   <h3>Waiting Room</h3>
-   <span>Username: </span><input id="usernameInput"></input><button onclick="changeUsername()">Change username</button><br>
-   <button onclick="leave()">Leave waiting room</button>
-   <button onclick="startGameButton()">Start game</button>
-   <div class="playerList">
+
+  <div id="container">
+    <div id="titleBar">
+      <h1>Dots and Boxes</h1>
+    </div>
+
+     <div class="section JoinMenu">
+       <input id="gameIdInput"> </input><button onclick="joinGame()">Join Game</button>
+     </div>
+
+     <div class="section WaitingRoom" hidden>
+       <h3>Waiting Room</h3>
+       <span>Username: </span><input id="usernameInput"></input><button onclick="changeUsername()">Change username</button><br>
+       <button onclick="leave()">Leave waiting room</button>
+       <button onclick="startGameButton()">Start game</button>
+       <div class="playerList">
+
+       </div>
+     </div>
+
+
+     <div class="section Game" hidden>
+       <div id="container2">
+         <div id="mainGame">
+           <p class="playerTurn" id="playerTurn"></p>
+           <canvas id="board"> </canvas>
+         </div>
+         <div id="sidebar">
+           <div class="playerList" />
+         </div>
+       </div>
+     </div>
 
    </div>
- </div>
- <div class="section Game" hidden>
-   <p class="playerTurn" id="playerTurn"></p>
-   <div id="boardContainer">
-     <canvas id="board"> </canvas>
-   </div>
-   <div class="playerList">
 
-   </div>
- </div>
-
-<script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
-<script src="/game.js"></script>
-<script src="/index.js"></script>
+  <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+  <script src="/game.js"></script>
+  <script src="/index.js"></script>
 
 </body>
 </html>
