@@ -13,7 +13,7 @@ let games = {};
 let roomCodes = {};
 
 const PORT = process.env.PORT || 3000;
-const COLOURS = ["red","green","yellow","blue","brown","cyan","dark green","dark red","gold","green yellow","pink","purple","teal"];
+const COLOURS = ["red","green","yellow","blue","brown","cyan","light green","orange","gold","pink","purple"];
 
 
 app.get('/game.js', (req, res) => {

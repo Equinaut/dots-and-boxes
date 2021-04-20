@@ -1,6 +1,7 @@
 body {
   margin: 0;
   height: 100%;
+  overflow-x: hidden;
 }
 .player {
   padding: 10px;
@@ -27,9 +28,9 @@ body {
 button {
   margin: 6px;
 }
-#container2 {
+#gameContainerOuter {
   display: flex;
-  flex-flow: row wrap;
+  flex-flow: row;
   height: 100%;
   justify-content: space-between;
 }
@@ -39,12 +40,11 @@ button {
   flex-grow: 1;
   flex-shrink: 1;
 }
-#mainGame {
+#gameContainerInner {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   flex-shrink: 1;
-  flex-basis: 60%;
   min-width: 200px;
 }
 #board {
@@ -60,4 +60,20 @@ button {
   padding: 20px;
   margin-bottom: 10px;
   border-bottom: solid 3px;
+}
+
+@media only screen and (max-width: 750px) {
+  #gameContainerInner,#board {
+    width: 100vw;
+    height: 100vw;
+    min-width: 0;
+    min-height: 0;
+    flex-grow: 0;
+  }
+  #sidebar {
+    flex-basis: 0;
+  }
+  #gameContainerOuter {
+    flex-flow: column;
+  }
 }
