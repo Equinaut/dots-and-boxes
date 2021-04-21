@@ -66,8 +66,6 @@ button {
   #gameContainerInner,#board {
     width: 100vw;
     height: 100vw;
-    min-width: 0;
-    min-height: 0;
     flex-grow: 0;
   }
   #sidebar {
