@@ -131,6 +131,19 @@ document.getElementById("board").addEventListener("mouseup", (mouseEvent) => {
   }
 }); //End of mouse drag, new line will be created if valid
 
+function sizeChange() {
+  let width = document.getElementById("widthInput").value;
+  let height = document.getElementById("heightInput").value;
+  document.getElementById("widthDisplay").innerText = width;
+  document.getElementById("heightDisplay").innerText = height;
+  GRID_WIDTH = width;
+  GRID_HEIGHT = height;
+  socket.emit("sizeChange", width, height);
+}
+
+document.getElementById("widthInput").addEventListener("input", sizeChange);
+document.getElementById("heightInput").addEventListener("input", sizeChange);
+
 function joinGame() {
   let code = document.getElementById("gameIdInput").value;
   document.getElementById("gameIdInput").value = "";
@@ -161,6 +174,10 @@ socket.on("gameJoin", (msg) => {
     PHASE = 1;
     console.log(msg);
     playerNumber = msg.playerNumber || 0;
+    document.getElementById("widthInput").value = msg.width;
+    document.getElementById("heightInput").value = msg.height;
+    document.getElementById("widthDisplay").innerText = msg.width;
+    document.getElementById("heightDisplay").innerText = msg.height;
   }
   else alert(msg.errorMessage || "Unknown error");
 });
@@ -169,7 +186,9 @@ socket.on("gameStart", (msg) => {
   console.log("Starting game", msg);
   lines = [];
   squares = [];
-  startGame(msg.width || 5, msg.width || 5);
+  GRID_WIDTH = msg.width || 5;
+  GRID_HEIGHT = msg.height || 5;
+  startGame(msg.width || 5, msg.height || 5);
   PHASE = 2;
 });
 
@@ -223,10 +242,17 @@ socket.on("playerList", (players) => {
       newPlayerRow.appendChild(newPlayer);
       newPlayerRow.appendChild(colourSample);
       element.appendChild(newPlayerRow);
-
     }
-
   }
+});
+
+socket.on("gridSize", (width, height) => {
+  document.getElementById("widthInput").value = width;
+  document.getElementById("heightInput").value = height;
+  document.getElementById("widthDisplay").innerText = width;
+  document.getElementById("heightDisplay").innerText = height;
+  GRID_WIDTH = width;
+  GRID_HEIGHT = height;
 });
 
 setInterval(draw, 5); //Calls the draw function every 5 ms

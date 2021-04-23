@@ -57,7 +57,7 @@ io.on("connection", (socket) => {
     } else {
       roomCodes[socket.id] = code;
       socket.join("Room:"+code);
-      socket.emit("gameJoin", {success: true, playerNumber: playerNum});
+      socket.emit("gameJoin", {success: true, playerNumber: playerNum, width: game.width, height: game.height});
       io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames());
     }
     console.log(code);
@@ -79,6 +79,18 @@ io.on("connection", (socket) => {
     io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames());
   });
 
+  socket.on("sizeChange", (width, height) => {
+    let code = roomCodes[socket.id];
+    if (code=="" || code==null) return;
+    if (!(code in games)) return;
+    let game = games[code];
+    if (game==null) return;
+    console.log(width, height);
+    game.width = width;
+    game.height = height;
+    io.to("Room:"+game.room).emit("gridSize", width, height);
+  });
+
   socket.on("gameStart", () => {
     let code = roomCodes[socket.id];
     if (code=="" || code==null) return;
@@ -87,6 +99,7 @@ io.on("connection", (socket) => {
     if (game==null) return;
     game.started = true;
     io.to("Room:"+code).emit("gameStart", {width: game.width, height: game.height});
+    console.log(game);
     sendGameState(game);
   });
 

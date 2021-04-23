@@ -13,7 +13,7 @@ class Game {
   createLine(startPosition, endPosition, playerNumber) { //Creates a new line with the given coordinates
     console.log(startPosition,endPosition);
     console.log(Math.max(...startPosition));
-    if (Math.max(...endPosition) >= this.width || Math.max(...startPosition) >= this.width || Math.min(...startPosition) < 0 || Math.min(...endPosition) < 0) return;
+    if (Math.max(...endPosition) >= this.width || Math.max(...startPosition) >= this.height || Math.min(...startPosition) < 0 || Math.min(...endPosition) < 0) return;
     let newLine = new Line(startPosition, endPosition); //New line object
     if (!(Math.abs(startPosition[0]-endPosition[0])+Math.abs(startPosition[1]-endPosition[1])==1)) return false; //Lines can only connect from each dot to adjacent dots, and not diagonal, length must be 1
     let doesntExist = true;
