@@ -1,7 +1,8 @@
 <html>
 <head>
-<link rel="stylesheet" href="style.css">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dots and Boxes </title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
@@ -11,32 +12,69 @@
     </div>
 
      <div class="section JoinMenu">
-       <input id="gameIdInput"> </input><button onclick="joinGame()">Join Game</button>
+       <div class="container joinContainer">
+           <input id="gameIdInput" placeholder="Room Code"> </input>
+           <button onclick="joinGame()">Join Game</button>
+       </div>
      </div>
 
      <div class="section WaitingRoom" hidden>
-       <h3>Waiting Room</h3>
-       <span>Username: </span><input id="usernameInput"></input><button onclick="changeUsername()">Change username</button><br>
-       <button onclick="leave()">Leave waiting room</button>
-       <button onclick="startGameButton()">Start game</button>
-       <br>
-       <h4>Grid size</h4>
-       <p>Width: <span id="widthDisplay">5</span><input type="range" id="widthInput" min=2 max=15 value=5> </input></p>
-       <p>Height: <span id="heightDisplay">5</span><input type="range" id="heightInput" min=2 max=15 value=5> </input></p>
-       <div class="playerList">
+       <div class="container waitingRoomContainer">
+         <h2>Waiting Room</h2>
+         <p>You are currently in waiting room <span id="roomDisplay"> </span></p>
 
+         <div class="settings">
+           <div class="setting" id="username">
+             <input id="usernameInput" placeholder="Username" maxlength=25></input>
+             <button onclick="changeUsername()">Change username</button><br>
+           </div>
+
+           <input id="colourInput" class="setting" type="color" list="presetColors">
+           <datalist id="presetColors">
+           <option value="#ff0000"/>
+           <option value="#ff8000"/>
+           <option value="#ffff00"/>
+           <option value="#80ff00"/>
+           <option value="#00ff00"/>
+           <option value="#00ffff"/>
+           <option value="#0080ff"/>
+           <option value="#0000ff"/>
+           <option value="#8000ff"/>
+           <option value="#ff00ff"/>
+           </datalist>
+           <button id="leaveButton" class="setting" onclick="leave()">Leave waiting room</button>
+
+
+           <button class="setting adminSetting" onclick="startGameButton()">Start game</button>
+           <div class="setting size">
+             <div class="sliderContainer">
+               <p>Width: <span id="widthDisplay"> 5 </span></p>
+               <input class="slider adminSetting" type="range" id="widthInput" min=2 max=15 value=5 />
+             </div>
+             <div class="sliderContainer">
+               <p>Height: <span id="heightDisplay"> 5 </span> </p>
+               <input class="slider adminSetting" type="range" id="heightInput" min=2 max=15 value=5 />
+             </div>
+
+           </div>
+         </div>
+          <div class="playerList"> </div>
        </div>
+
      </div>
 
 
      <div class="section Game" hidden>
        <div id="gameContainerOuter">
          <div id="gameContainerInner">
-           <p class="playerTurn" id="playerTurn"></p>
+           <div class="topBar" id="topBar">
+             <p class="playerTurn" id="playerTurn"></p>
+             <div class="gameEndControls" id="gameEndControls" hidden><button onclick="restartGame()">Restart Game</button></div>
+           </div>
            <canvas id="board"> </canvas>
          </div>
          <div id="sidebar">
-           <div class="playerList" />
+           <div class="playerList"> </div>
          </div>
        </div>
      </div>

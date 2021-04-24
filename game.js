@@ -1,6 +1,5 @@
 class Game {
   constructor(room) {
-    this.working = true;
     this.width = 5;
     this.height = 5;
     this.room = room;
@@ -8,6 +7,16 @@ class Game {
     this.squares = [];
     this.players = [];
     this.currentTurn = 0;
+  }
+
+  restart() {
+      this.lines = [];
+      this.squares = [];
+      this.currentTurn = 0;
+  }
+
+  get finished() {
+    return this.squares.length == (this.width-1) * (this.height-1);
   }
 
   createLine(startPosition, endPosition, playerNumber) { //Creates a new line with the given coordinates

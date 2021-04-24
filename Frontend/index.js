@@ -5,6 +5,8 @@ let PHASE = 0;
 //Phase is 1 in waiting room
 //Phase is 2 in game
 
+let DEFAULT_WIDTH = 5; //Default width of grid in dots
+let DEFAULT_HEIGHT = 5; //Default height of grid in dots
 let GRID_WIDTH = 5; //Width of the grid in dots
 let GRID_HEIGHT = 5; //Height of the grid in dots
 let SQUARE_SIZE = 100; //Distance between dots in pixels
@@ -16,6 +18,7 @@ let boardCanvas; //DOM element of HTML canvas
 let mouseX = mouseY = 0; //Mouse X and Y position relative to canvas updated whenever mouse is moved
 let mouseDown = false; //If the mouse is pressed or not
 let dragStartPosition; //Start location of mouse drag
+let showAdmin = false; //Whether or not to show the admin only settings
 
 let selected = false; //If a dot is selected
 let selectedPosition; //Position of selected dot
@@ -131,24 +134,43 @@ document.getElementById("board").addEventListener("mouseup", (mouseEvent) => {
   }
 }); //End of mouse drag, new line will be created if valid
 
-function sizeChange() {
-  let width = document.getElementById("widthInput").value;
-  let height = document.getElementById("heightInput").value;
-  document.getElementById("widthDisplay").innerText = width;
-  document.getElementById("heightDisplay").innerText = height;
-  GRID_WIDTH = width;
-  GRID_HEIGHT = height;
-  socket.emit("sizeChange", width, height);
+function sizeChange(direction) {
+  let size = {};
+  if (direction=="width") {
+    let width = document.getElementById("widthInput").value;
+    document.getElementById("widthDisplay").innerText = width;
+    GRID_WIDTH = width;
+    size.width = width;
+  } else if (direction=="height") {
+    let height = document.getElementById("heightInput").value;
+    document.getElementById("heightDisplay").innerText = height;
+    GRID_HEIGHT = height;
+    size.height = height;
+  }
+  socket.emit("sizeChange", size);
 }
+function colourChange() {
+  socket.emit("colourChange", document.getElementById("colourInput").value);
+}
+document.getElementById("colourInput").addEventListener("input", () => colourChange());
 
-document.getElementById("widthInput").addEventListener("input", sizeChange);
-document.getElementById("heightInput").addEventListener("input", sizeChange);
+document.getElementById("widthInput").addEventListener("input", () => sizeChange("width"));
+document.getElementById("heightInput").addEventListener("input", () => sizeChange("height"));
+
+document.getElementById("gameIdInput").addEventListener("keydown", (e) => {
+  if (!e) return;
+  if (e.keyCode==13) joinGame();
+});
+document.getElementById("usernameInput").addEventListener("keydown", (e) => {
+  if (!e) return;
+  if (e.keyCode==13) changeUsername();
+})
 
 function joinGame() {
   let code = document.getElementById("gameIdInput").value;
   document.getElementById("gameIdInput").value = "";
   console.log(code);
-  socket.emit("joinGame", code);
+  socket.emit("joinGame", code, document.cookie);
 }
 
 function leave() {
@@ -156,6 +178,9 @@ function leave() {
 }
 function startGameButton() {
   socket.emit("gameStart");
+}
+function restartGame() {
+  socket.emit("restart");
 }
 function changeUsername() {
   let name = document.getElementById("usernameInput").value;
@@ -174,10 +199,15 @@ socket.on("gameJoin", (msg) => {
     PHASE = 1;
     console.log(msg);
     playerNumber = msg.playerNumber || 0;
-    document.getElementById("widthInput").value = msg.width;
-    document.getElementById("heightInput").value = msg.height;
-    document.getElementById("widthDisplay").innerText = msg.width;
-    document.getElementById("heightDisplay").innerText = msg.height;
+    showAdmin = msg.admin;
+    if (showAdmin==null) showAdmin = false;
+    for (let element of document.getElementsByClassName("adminSetting")) element.hidden = !showAdmin;
+
+    document.getElementById("widthInput").value = msg.width || DEFAULT_WIDTH;
+    document.getElementById("heightInput").value = msg.height || DEFAULT_HEIGHT;
+    document.getElementById("widthDisplay").innerText = msg.width || DEFAULT_WIDTH;
+    document.getElementById("heightDisplay").innerText = msg.height || DEFAULT_HEIGHT;
+    document.getElementById("roomDisplay").innerText = msg.room || undefined;
   }
   else alert(msg.errorMessage || "Unknown error");
 });
@@ -186,21 +216,25 @@ socket.on("gameStart", (msg) => {
   console.log("Starting game", msg);
   lines = [];
   squares = [];
-  GRID_WIDTH = msg.width || 5;
-  GRID_HEIGHT = msg.height || 5;
-  startGame(msg.width || 5, msg.height || 5);
+  GRID_WIDTH = msg.width || DEFAULT_WIDTH;
+  GRID_HEIGHT = msg.height || DEFAULT_HEIGHT;
+  startGame(msg.width || DEFAULT_WIDTH, msg.height || DEFAULT_HEIGHT);
   PHASE = 2;
 });
 
 socket.on("gameState", (msg) => {
+  //Runs whenever a new gameState is received
   console.log("Gamestate received");
   currentTurn = msg.currentTurn;
   let newLines = [];
   let newSquares = [];
   for (let line of msg.lines) newLines.push(new Line(line.startPosition, line.endPosition));
   for (let square of msg.squares) newSquares.push(new Square(square.topLeft, square.player));
+  //Create line and square elements
   lines = newLines;
   squares = newSquares;
+  //Replace originals
+  document.getElementById("gameEndControls").hidden = !(showAdmin && msg.finished)
   for (let playerList of document.getElementsByClassName("playerList")) {
     for (let i=0; i<playerList.childElementCount; i++) {
       if (i==currentTurn) playerList.children[i].classList.add("currentTurn");
@@ -209,39 +243,41 @@ socket.on("gameState", (msg) => {
   }
   if (currentTurn == playerNumber) {
     document.getElementById("playerTurn").innerText="Your turn";
-    document.getElementById("playerTurn").classList.add("currentTurn");
+    document.getElementById("topBar").classList.add("currentTurn");
   } else {
     selected = false;
     document.getElementById("playerTurn").innerText="Waiting for other players";
-    document.getElementById("playerTurn").classList.remove("currentTurn");
+    document.getElementById("topBar").classList.remove("currentTurn");
   }
 
   console.log(msg);
 });
 
-socket.on("playerList", (players) => {
-  allPlayers = players;
+socket.on("playerList", (players) => { //When playerlist received from server
+  allPlayers = players; //Update players list
   let playerListElements = document.getElementsByClassName("playerList");
-  for (let element of playerListElements) element.innerHTML = "";
+  for (let element of playerListElements) element.innerHTML = ""; //Clear list
+
   for (let player of players) {
     for (let element of playerListElements) {
+      //Create item for list
       let newPlayerRow = document.createElement("div");
-      newPlayerRow.style.display="flex";
-      newPlayerRow.style.justifyContent = "space-between";
       let newPlayer = document.createElement("p");
       newPlayer.innerText = (player.number+1)+". "+player.name;
-      newPlayerRow.classList.add("player");
+      //Add player number and name to p tag in row
+      newPlayerRow.classList.add("player"); //Add the player class to this
+
       let colourSample = document.createElement("div");
+      //Div to show the colour that this player is
       colourSample.style.background=player.colour;
-      colourSample.style.border="solid 5px"
-      colourSample.style.width="50px";
-      colourSample.style.height="50px";
-      newPlayerRow.style.margin="-3px 10px 0 10px";
-      newPlayerRow.style.border="solid 3px";
-      newPlayer.style.padding="5px";
+      colourSample.classList.add("colourSample");
+
+      if (player.number == playerNumber) newPlayerRow.classList.add("thisPlayer");
+
       newPlayerRow.appendChild(newPlayer);
       newPlayerRow.appendChild(colourSample);
-      element.appendChild(newPlayerRow);
+
+      element.appendChild(newPlayerRow); //Adds elements to list
     }
   }
 });

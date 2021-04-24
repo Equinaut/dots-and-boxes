@@ -7,6 +7,7 @@ const io = require('socket.io')(server,{
 	   methods: ["GET"]
    }
   });
+
 const {Game, Line, Square} = require("./game.js");
 
 let games = {};
@@ -32,12 +33,23 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/Frontend/index.html');
 });
 
-function sendGameState(game) {
-  io.to("Room:"+game.room).emit("gameState", {lines: game.lines, squares: game.squares, currentTurn: game.currentTurn});
+app.get('/getAdmin', (req, res) => { //Sets cookie that gives this user admin access in every room they join
+  console.log(res.cookie('admin',"true", { maxAge: 1000 * 86400 * 7 }));
+  res.redirect('/');
+});
+
+function sendGameState(game) { //Sends the current game state, whenever an update happens such as someone placing a line
+  io.to("Room:"+game.room).emit("gameState",
+    {
+      lines: game.lines,
+      squares: game.squares,
+      currentTurn: game.currentTurn,
+      finished: game.finished
+    });
 }
 
 io.on("connection", (socket) => {
-  socket.on("joinGame", (code) => {
+  socket.on("joinGame", (code, cookies) => { //When ever a user tries to join a room
     if (code=="" || code==null) return;
     if (!(code in games)) {
       games[code] = new Game(code);
@@ -49,61 +61,128 @@ io.on("connection", (socket) => {
         return;
       }
     }
+
     let playerNum = 0;
     if (game.players.length>0) playerNum = game.players[game.players.length-1].number+1;
-    game.players.push({id: socket.id, number: playerNum, name: "Player "+(playerNum+1).toString(), colour: COLOURS[playerNum%(COLOURS.length)]});
+
+    let admin = false; //Check if admin access
+    if (game.players.length==0) admin = true;
+
+    cookies = cookies.split("; ");
+    let cookiesParsed = {};
+    for (let cookie of cookies) cookiesParsed[cookie.split("=")[0]] = cookie.split("=")[1];
+    if (cookiesParsed.admin=="true") admin = true;
+
+    game.players.push( //Add new player object to room
+      {
+        id: socket.id,
+        number: playerNum,
+        name: "Player "+(playerNum+1).toString(),
+        colour: COLOURS[playerNum%(COLOURS.length)],
+        admin: admin
+      }
+    );
     if (game.started) {
       socket.emit("gameJoin", {"success": false, "errorMessage": "Game has already started"});
     } else {
-      roomCodes[socket.id] = code;
+      roomCodes[socket.id] = code; //Find room
       socket.join("Room:"+code);
-      socket.emit("gameJoin", {success: true, playerNumber: playerNum, width: game.width, height: game.height});
-      io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames());
+      socket.emit("gameJoin",
+        {
+          success: true,
+          playerNumber: playerNum,
+          width: game.width,
+          height: game.height,
+          room: game.room,
+          admin: admin
+        });
+
+      io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames()); //Sends updated player list
     }
-    console.log(code);
   });
 
-  socket.on("setName", (name) => {
-    if (!(name.length>3&&name.length<25)) return;
+  socket.on("setName", (name) => { //When user wants to change their name
+    if (! ( name.length >= 2 && name.length <= 25) ) return;
+
+    let code = roomCodes[socket.id];
+    if (code=="" || code==null) return;
+    if (!(code in games)) return;
+    let game = games[code];
+    if (game==null) return;
+
+    for (let player of game.players) {
+      if (player.id==socket.id) {
+        player.name = name;
+      }
+    }
+    io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames());
+  });
+
+
+  socket.on("sizeChange", (size) => { //Whenever user wants to change size setting of game
+    let code = roomCodes[socket.id];
+    if (code=="" || code==null) return;
+    if (!(code in games)) return;
+    let game = games[code];
+    if (game==null) return;
+
+    for (let player of game.players) {
+      if (player.id==socket.id && player.admin) {
+        game.width = size.width || game.width;
+        game.height = size.height || game.height;
+        io.to("Room:"+game.room).emit("gridSize", game.width, game.height);
+      }
+    }
+  });
+
+  socket.on("colourChange", (colour) => { //Whenever user wants to change their player colour
+    let code = roomCodes[socket.id];
+    if (code=="" || code==null) return;
+    if (!(code in games)) return;
+    let game = games[code];
+    if (game==null) return;
+
+    for (let player of game.players) {
+      if (player.id==socket.id) {
+        player.colour = colour;
+        io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames()); //Updates playerlist
+        return;
+      }
+    }
+  });
+
+
+  socket.on("gameStart", () => { //Runs when start button is pressed
     let code = roomCodes[socket.id];
     if (code=="" || code==null) return;
     if (!(code in games)) return;
     let game = games[code];
     if (game==null) return;
     for (let player of game.players) {
-      if (player.id==socket.id) {
-        player.name = name;
+      if (player.id==socket.id && player.admin) { //Must have admin access
+        game.started = true;
+        io.to("Room:"+code).emit("gameStart", {width: game.width, height: game.height});
+        console.log(game);
+        sendGameState(game);
       }
     }
-    console.log("Room:"+game.room, game.updatePlayerNames());
-    io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames());
   });
 
-  socket.on("sizeChange", (width, height) => {
+  socket.on("restart", () => { //Runs when start button is pressed
     let code = roomCodes[socket.id];
     if (code=="" || code==null) return;
     if (!(code in games)) return;
     let game = games[code];
     if (game==null) return;
-    console.log(width, height);
-    game.width = width;
-    game.height = height;
-    io.to("Room:"+game.room).emit("gridSize", width, height);
+    for (let player of game.players) {
+      if (player.id==socket.id && player.admin) { //Must have admin access
+        if (game.finished) game.restart();
+        sendGameState(game);
+      }
+    }
   });
 
-  socket.on("gameStart", () => {
-    let code = roomCodes[socket.id];
-    if (code=="" || code==null) return;
-    if (!(code in games)) return;
-    let game = games[code];
-    if (game==null) return;
-    game.started = true;
-    io.to("Room:"+code).emit("gameStart", {width: game.width, height: game.height});
-    console.log(game);
-    sendGameState(game);
-  });
-
-  socket.on("move", (startPosition, endPosition) => {
+  socket.on("move", (startPosition, endPosition) => { //When player places a line
     if (!(socket.id in roomCodes)) return;
     let gameCode = roomCodes[socket.id];
     let game = games[gameCode];
@@ -112,10 +191,9 @@ io.on("connection", (socket) => {
     if (game.players[game.currentTurn].id!=socket.id) return;
     game.createLine(startPosition, endPosition, game.currentTurn);
     sendGameState(game);
-    console.log("Room:"+game);
   });
 
-  socket.on("leave", () => {
+  socket.on("leave", () => { //If leave event is sent
     if (!(socket.id in roomCodes)) return;
     let gameCode = roomCodes[socket.id];
     if (gameCode==null) return;
@@ -126,11 +204,9 @@ io.on("connection", (socket) => {
     if (!(gameCode in games)) return;
     delete games[gameCode];
     io.of("/").adapter.rooms.delete("Room:"+gameCode);
-    console.log(games);
-    console.log(roomCodes);
   });
 
-  socket.on("disconnecting", () => {
+  socket.on("disconnecting", () => { //When socket disconnects
     if (!(socket.id in roomCodes)) return;
     let gameCode = roomCodes[socket.id];
     if (gameCode==null) return;
@@ -141,11 +217,10 @@ io.on("connection", (socket) => {
     if (!(gameCode in games)) return;
     delete games[gameCode];
     io.of("/").adapter.rooms.delete("Room:"+gameCode);
-    console.log(games);
-    console.log(roomCodes);
   });
 })
 
-server.listen(PORT, () => {
+
+server.listen(PORT, () => { //Listens on PORT (defaults to 3000)
   console.log('listening on *:', PORT);
 })

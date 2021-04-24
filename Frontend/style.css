@@ -1,33 +1,124 @@
-body {
-  margin: 0;
+body, .section  {
   height: 100%;
-  overflow-x: hidden;
-}
-.player {
-  padding: 10px;
-}
-.playerList {
-  margin: 2px 0;
-}
-.playerTurn {
-  padding: 8px;
-  background: orange;
   margin: 0;
+  overflow-x: hidden;
 }
 #container {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
-.section {
-  height: 100%;
-}
 .JoinMenu,.WaitingRoom {
   padding: 25px;
 }
 button {
-  margin: 6px;
+  padding: 5px;
 }
+
+/* Join Screen */
+.section>.container {
+  display: flex;
+  max-width: 500px;
+  margin: auto;
+}
+.waitingRoomContainer {
+  flex-direction: column;
+}
+#gameIdInput {
+  flex-grow: 1;
+}
+
+
+/* Waiting Room */
+#roomDisplay {
+  font-weight: bold;
+}
+
+.settings {
+  margin: 10px;
+}
+
+#username {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#username>* {
+  flex-shrink: 1;
+  flex-grow: 1;
+}
+
+#username>button {
+  max-width: 300px;
+}
+
+.setting {
+  width: 100%;
+  margin: 5px;
+}
+
+.adminSettings>h3 {
+  margin: 5px;
+}
+
+.sliderContainer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sliderContainer>p {
+  width: 6em;
+}
+
+.sliderContainer>input {
+  flex-grow: 1;
+  margin: 0 3em;
+}
+
+/* Main Game Screen */
+
+.player {  /* Player object in player list */
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  margin: -3px 10px 0 10px;
+  border: solid 3px;
+}
+
+.player>p {
+  padding: 5px;
+}
+
+.playerList {
+  margin: 4px 0;
+}
+.topBar {
+  padding: 8px;
+  padding-right: 20px;
+  background: orange;
+  display: flex;
+  margin-right: 1em;
+}
+.playerTurn {
+  margin: 0;
+  padding: 8px;
+  flex-grow: 1;
+}
+
+.colourSample {
+  border: solid 5px;
+  width: 50px;
+  height: 50px;
+}
+
+.currentTurn {
+  background: #92ff45;
+}
+
+.thisPlayer {
+  border: solid 5px;
+}
+
 #gameContainerOuter {
   display: flex;
   flex-flow: row;
@@ -35,11 +126,6 @@ button {
   justify-content: space-between;
 }
 
-#sidebar {
-  flex-basis: 300px;
-  flex-grow: 1;
-  flex-shrink: 1;
-}
 #gameContainerInner {
   display: flex;
   flex-direction: column;
@@ -47,15 +133,20 @@ button {
   flex-shrink: 1;
   min-width: 200px;
 }
+
+#sidebar {
+  flex-basis: 300px;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
 #board {
   flex-grow: 1;
   min-width: 200px;
   min-height: 200px;
   margin: 4px;
 }
-.currentTurn {
-  background: #92ff45;
-}
+
 #titleBar {
   padding: 20px;
   margin-bottom: 10px;
@@ -63,14 +154,12 @@ button {
 }
 
 @media only screen and (max-width: 750px) {
-  #gameContainerInner,#board {
+  #gameContainerInner, #board {
     width: 100vw;
     height: 100vw;
     flex-grow: 0;
   }
-  #sidebar {
-    flex-basis: 0;
-  }
+
   #gameContainerOuter {
     flex-flow: column;
   }
