@@ -114,6 +114,9 @@ button {
 .currentTurn {
   background: #92ff45;
 }
+.waitingForNewGame {
+  background: yellow;
+}
 
 .thisPlayer {
   border: solid 5px;

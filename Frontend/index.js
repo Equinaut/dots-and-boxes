@@ -241,13 +241,19 @@ socket.on("gameState", (msg) => {
       else playerList.children[i].classList.remove("currentTurn");
     }
   }
-  if (currentTurn == playerNumber) {
+  if (currentTurn == playerNumber && !msg.finished) {
     document.getElementById("playerTurn").innerText="Your turn";
     document.getElementById("topBar").classList.add("currentTurn");
-  } else {
+    document.getElementById("topBar").classList.remove("waitingForNewGame");
+  } else if (!(msg.finished)) {
     selected = false;
     document.getElementById("playerTurn").innerText="Waiting for other players";
     document.getElementById("topBar").classList.remove("currentTurn");
+    document.getElementById("topBar").classList.remove("waitingForNewGame");
+  } else {
+    document.getElementById("playerTurn").innerText="Waiting for game to start";
+    document.getElementById("topBar").classList.remove("currentTurn");
+    document.getElementById("topBar").classList.add("waitingForNewGame");
   }
 
   console.log(msg);

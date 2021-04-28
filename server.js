@@ -178,7 +178,9 @@ io.on("connection", (socket) => {
     for (let player of game.players) {
       if (player.id==socket.id && player.admin) { //Must have admin access
         if (game.finished) game.restart();
+        console.log(game);
         sendGameState(game);
+        io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
       }
     }
   });

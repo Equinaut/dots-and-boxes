@@ -7,12 +7,14 @@ class Game {
     this.squares = [];
     this.players = [];
     this.currentTurn = 0;
+    this.firstPlayerTurn = this.currentTurn;
   }
 
   restart() {
       this.lines = [];
       this.squares = [];
-      this.currentTurn = 0;
+      this.firstPlayerTurn = (this.firstPlayerTurn+1) % this.players.length;
+      this.currentTurn = this.firstPlayerTurn;
       for (let player of this.players) player.score = 0;
   }
 
@@ -97,7 +99,7 @@ class Game {
           foundLinesBottom.toString() == [true, true, true].toString()) ||
           newLine.endPosition[1]!=newLine.startPosition[1] && (foundLinesRight.toString()  == [true, true, true].toString() ||
           foundLinesLeft.toString()   == [true, true, true].toString()))) {
-            this.currentTurn = (this.currentTurn+1)%this.players.length;
+          this.currentTurn = (this.currentTurn+1) % this.players.length;
        }
        console.log(foundLinesTop,foundLinesBottom,foundLinesRight,foundLinesLeft);
 
