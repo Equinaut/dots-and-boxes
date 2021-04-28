@@ -264,6 +264,7 @@ socket.on("playerList", (players) => { //When playerlist received from server
       let newPlayerRow = document.createElement("div");
       let newPlayer = document.createElement("p");
       newPlayer.innerText = (player.number+1)+". "+player.name;
+      if (PHASE==2) newPlayer.innerText = (player.number+1)+". "+player.name+ " | "+(player.score || 0) + " points";
       //Add player number and name to p tag in row
       newPlayerRow.classList.add("player"); //Add the player class to this
 

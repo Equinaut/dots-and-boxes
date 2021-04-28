@@ -13,6 +13,7 @@ class Game {
       this.lines = [];
       this.squares = [];
       this.currentTurn = 0;
+      for (let player of this.players) player.score = 0;
   }
 
   get finished() {
@@ -25,7 +26,7 @@ class Game {
     if (startPosition[0] >= this.width || endPosition[0] >= this.width ||
         startPosition[1] >= this.height || endPosition[1] >= this.height ||
         Math.min(...startPosition) < 0 || Math.min(...endPosition) < 0) return;
-        
+
     let newLine = new Line(startPosition, endPosition); //New line object
     if (!(Math.abs(startPosition[0]-endPosition[0])+Math.abs(startPosition[1]-endPosition[1])==1)) return false; //Lines can only connect from each dot to adjacent dots, and not diagonal, length must be 1
     let doesntExist = true;
@@ -70,13 +71,28 @@ class Game {
           if (foundLinesTop[i] && foundLinesBottom[i] && foundLinesRight[i] && foundLinesLeft[i]) break;
         }
       }
+      console.log(this.players);
       if (newLine.endPosition[1]==newLine.startPosition[1]) { //Horizontal line
-        if (foundLinesTop.toString() == [true, true, true].toString()) this.squares.push(new Square(newLine.startPosition, playerNumber));
-        if (foundLinesBottom.toString() == [true, true, true].toString()) this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1] - 1], playerNumber));
+        if (foundLinesTop.toString() == [true, true, true].toString()) {
+          this.squares.push(new Square(newLine.startPosition, playerNumber));
+          this.players[playerNumber].score+=1;
+        }
+        if (foundLinesBottom.toString() == [true, true, true].toString()) {
+          this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1] - 1], playerNumber));
+          this.players[playerNumber].score+=1;
+        }
       } else { //Vertical line
-        if (foundLinesRight.toString() == [true, true, true].toString()) this.squares.push(new Square([newLine.startPosition[0] - 1, newLine.startPosition[1]], playerNumber));
-        if (foundLinesLeft.toString() == [true, true, true].toString()) this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1]], playerNumber));
+        if (foundLinesRight.toString() == [true, true, true].toString()) {
+          this.squares.push(new Square([newLine.startPosition[0] - 1, newLine.startPosition[1]], playerNumber));
+          this.players[playerNumber].score+=1;
+        }
+        if (foundLinesLeft.toString() == [true, true, true].toString()) {
+          this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1]], playerNumber));
+          this.players[playerNumber].score+=1;
+        }
+
       }
+
       if (!(newLine.endPosition[1]==newLine.startPosition[1] && (foundLinesTop.toString()    == [true, true, true].toString() ||
           foundLinesBottom.toString() == [true, true, true].toString()) ||
           newLine.endPosition[1]!=newLine.startPosition[1] && (foundLinesRight.toString()  == [true, true, true].toString() ||
@@ -90,10 +106,16 @@ class Game {
     console.log(this.squares);
     return doesntExist; //Returns boolean, if the new line was created or not
   }
+
   updatePlayerNames() {
     let players = [];
     for (let player of this.players) {
-      players.push({name: player.name, number: player.number, colour: player.colour});
+      players.push(
+        {name: player.name,
+         number: player.number,
+         colour: player.colour,
+         score: player.score || 0
+       });
     }
     return players;
   }

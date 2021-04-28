@@ -78,6 +78,7 @@ io.on("connection", (socket) => {
         id: socket.id,
         number: playerNum,
         name: "Player "+(playerNum+1).toString(),
+        score: 0,
         colour: COLOURS[playerNum%(COLOURS.length)],
         admin: admin
       }
@@ -191,6 +192,7 @@ io.on("connection", (socket) => {
     if (game.players[game.currentTurn].id!=socket.id) return;
     game.createLine(startPosition, endPosition, game.currentTurn);
     sendGameState(game);
+    io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames()); //Sends updated player list
   });
 
   socket.on("leave", () => { //If leave event is sent
