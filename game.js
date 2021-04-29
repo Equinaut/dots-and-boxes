@@ -7,6 +7,7 @@ class Game {
     this.squares = [];
     this.players = [];
     this.currentTurn = 0;
+    this.winCounted = false;
     this.firstPlayerTurn = this.currentTurn;
   }
 
@@ -15,16 +16,36 @@ class Game {
       this.squares = [];
       this.firstPlayerTurn = (this.firstPlayerTurn+1) % this.players.length;
       this.currentTurn = this.firstPlayerTurn;
+      this.winCounted = false;
       for (let player of this.players) player.score = 0;
   }
 
   get finished() {
-    return this.squares.length == (this.width-1) * (this.height-1);
+    let finished = this.squares.length == (this.width-1) * (this.height-1);
+    if (!this.winCounted && finished) {
+      let oneWinner = true; //If only one player has the most points (not a draw)
+      let winner = null;
+      let points = 0;
+
+      for (let i=0; i<this.players.length; i++) {
+        let player = this.players[i];
+        if (player.score > points) {
+          oneWinner = true;
+          points = player.score;
+          winner = i;
+        } else if (player.score == points) {
+          oneWinner = false;
+          winner = null;
+        }
+      }
+
+      if (oneWinner && (winner!=null)) this.players[winner].wins++;
+      this.winCounted = true;
+    }
+    return finished;
   }
 
   createLine(startPosition, endPosition, playerNumber) { //Creates a new line with the given coordinates
-    console.log(startPosition,endPosition);
-    console.log(Math.max(...startPosition));
     if (startPosition[0] >= this.width || endPosition[0] >= this.width ||
         startPosition[1] >= this.height || endPosition[1] >= this.height ||
         Math.min(...startPosition) < 0 || Math.min(...endPosition) < 0) return;
@@ -73,23 +94,35 @@ class Game {
           if (foundLinesTop[i] && foundLinesBottom[i] && foundLinesRight[i] && foundLinesLeft[i]) break;
         }
       }
-      console.log(this.players);
+
       if (newLine.endPosition[1]==newLine.startPosition[1]) { //Horizontal line
         if (foundLinesTop.toString() == [true, true, true].toString()) {
-          this.squares.push(new Square(newLine.startPosition, playerNumber));
+          this.squares.push({
+            topLeft: newLine.startPosition,
+            player: playerNumber
+          });
           this.players[playerNumber].score+=1;
         }
         if (foundLinesBottom.toString() == [true, true, true].toString()) {
-          this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1] - 1], playerNumber));
+          this.squares.push({
+            topLeft: [newLine.startPosition[0],
+            newLine.startPosition[1] - 1], player: playerNumber
+          });
           this.players[playerNumber].score+=1;
         }
       } else { //Vertical line
         if (foundLinesRight.toString() == [true, true, true].toString()) {
-          this.squares.push(new Square([newLine.startPosition[0] - 1, newLine.startPosition[1]], playerNumber));
+          this.squares.push({
+            topLeft: [newLine.startPosition[0] - 1,
+            newLine.startPosition[1]], player: playerNumber
+          });
           this.players[playerNumber].score+=1;
         }
         if (foundLinesLeft.toString() == [true, true, true].toString()) {
-          this.squares.push(new Square([newLine.startPosition[0], newLine.startPosition[1]], playerNumber));
+          this.squares.push({
+            topLeft: [newLine.startPosition[0],
+            newLine.startPosition[1]], player: playerNumber
+          });
           this.players[playerNumber].score+=1;
         }
 
@@ -101,11 +134,8 @@ class Game {
           foundLinesLeft.toString()   == [true, true, true].toString()))) {
           this.currentTurn = (this.currentTurn+1) % this.players.length;
        }
-       console.log(foundLinesTop,foundLinesBottom,foundLinesRight,foundLinesLeft);
 
     }
-    console.log(this.lines);
-    console.log(this.squares);
     return doesntExist; //Returns boolean, if the new line was created or not
   }
 
@@ -113,10 +143,12 @@ class Game {
     let players = [];
     for (let player of this.players) {
       players.push(
-        {name: player.name,
-         number: player.number,
-         colour: player.colour,
-         score: player.score || 0
+        {
+          name: player.name || "Unknown player",
+          number: player.number || 0,
+          pattern: player.pattern,
+          score: player.score || 0,
+          wins: player.wins || 0
        });
     }
     return players;
@@ -141,12 +173,5 @@ class Line { //Class for line object
   }
 }
 
-class Square { //Class for square object
-  constructor(topLeft, playerNumber) {
-    this.topLeft = topLeft;
-    this.player = playerNumber;
-  }
-}
 module.exports.Game = Game;
 module.exports.Line = Line;
-module.exports.Square = Square;

@@ -138,7 +138,7 @@ button {
 }
 
 #sidebar {
-  flex-basis: 300px;
+  flex-basis: 350px;
   flex-grow: 1;
   flex-shrink: 1;
 }
@@ -162,8 +162,16 @@ button {
     height: 100vw;
     flex-grow: 0;
   }
-
+  #container {
+    height: auto;
+  }
   #gameContainerOuter {
     flex-flow: column;
+  }
+
+  #sidebar {
+    flex-basis: 0;
+    flex-grow: 0;
+    flex-shrink: 0;
   }
 }

@@ -8,35 +8,35 @@ const io = require('socket.io')(server,{
    }
   });
 
-const {Game, Line, Square} = require("./game.js");
+const {Game, Line} = require("./game.js");
+const {Player} = require("./player.js");
 
 let games = {};
 let roomCodes = {};
 
 const PORT = process.env.PORT || 3000;
-const COLOURS = ["red","green","yellow","blue","brown","cyan","light green","orange","gold","pink","purple"];
-
 
 app.get('/game.js', (req, res) => {
   res.sendFile(__dirname + '/Frontend/game.js');
 });
-
 app.get('/index.js', (req, res) => {
   res.sendFile(__dirname + '/Frontend/index.js');
 });
-
+app.get('/square.js', (req, res) => {
+  res.sendFile(__dirname + '/Frontend/square.js');
+});
 app.get('/style.css', (req, res) => {
   res.sendFile(__dirname + '/Frontend/style.css');
 });
-
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/Frontend/index.html');
 });
-
 app.get('/getAdmin', (req, res) => { //Sets cookie that gives this user admin access in every room they join
-  console.log(res.cookie('admin',"true", { maxAge: 1000 * 86400 * 7 }));
+  res.cookie('admin',"true", { maxAge: 1000 * 86400 * 7 });
   res.redirect('/');
 });
+
+
 
 function sendGameState(game) { //Sends the current game state, whenever an update happens such as someone placing a line
   io.to("Room:"+game.room).emit("gameState",
@@ -45,10 +45,12 @@ function sendGameState(game) { //Sends the current game state, whenever an updat
       squares: game.squares,
       currentTurn: game.currentTurn,
       finished: game.finished
-    });
+    }
+  );
 }
 
 io.on("connection", (socket) => {
+
   socket.on("joinGame", (code, cookies) => { //When ever a user tries to join a room
     if (code=="" || code==null) return;
     if (!(code in games)) {
@@ -57,7 +59,12 @@ io.on("connection", (socket) => {
     let game = games[code];
     for (let player of game.players) {
       if (player.id==socket.id) {
-        socket.emit("gameJoin", {"success": false, "errorMessage": "You are already in this game"});
+        socket.emit("gameJoin",
+          {
+            "success": false,
+            "errorMessage": "You are already in this game"
+          }
+        );
         return;
       }
     }
@@ -73,16 +80,9 @@ io.on("connection", (socket) => {
     for (let cookie of cookies) cookiesParsed[cookie.split("=")[0]] = cookie.split("=")[1];
     if (cookiesParsed.admin=="true") admin = true;
 
-    game.players.push( //Add new player object to room
-      {
-        id: socket.id,
-        number: playerNum,
-        name: "Player "+(playerNum+1).toString(),
-        score: 0,
-        colour: COLOURS[playerNum%(COLOURS.length)],
-        admin: admin
-      }
-    );
+    //New player created
+    game.players.push(new Player(socket.id, playerNum, admin)); //Add new player object to room
+
     if (game.started) {
       socket.emit("gameJoin", {"success": false, "errorMessage": "Game has already started"});
     } else {
@@ -101,6 +101,7 @@ io.on("connection", (socket) => {
       io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames()); //Sends updated player list
     }
   });
+
 
   socket.on("setName", (name) => { //When user wants to change their name
     if (! ( name.length >= 2 && name.length <= 25) ) return;
@@ -136,6 +137,7 @@ io.on("connection", (socket) => {
     }
   });
 
+
   socket.on("colourChange", (colour) => { //Whenever user wants to change their player colour
     let code = roomCodes[socket.id];
     if (code=="" || code==null) return;
@@ -162,12 +164,16 @@ io.on("connection", (socket) => {
     for (let player of game.players) {
       if (player.id==socket.id && player.admin) { //Must have admin access
         game.started = true;
-        io.to("Room:"+code).emit("gameStart", {width: game.width, height: game.height});
-        console.log(game);
+        io.to("Room:"+code).emit("gameStart", {
+          width: game.width,
+          height: game.height
+        });
         sendGameState(game);
+        io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames()); //Updates playerlist
       }
     }
   });
+
 
   socket.on("restart", () => { //Runs when start button is pressed
     let code = roomCodes[socket.id];
@@ -176,9 +182,8 @@ io.on("connection", (socket) => {
     let game = games[code];
     if (game==null) return;
     for (let player of game.players) {
-      if (player.id==socket.id && player.admin) { //Must have admin access
-        if (game.finished) game.restart();
-        console.log(game);
+      if (game.finished && player.id==socket.id && player.admin) { //Must have admin access
+        game.restart();
         sendGameState(game);
         io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
       }
@@ -194,8 +199,9 @@ io.on("connection", (socket) => {
     if (game.players[game.currentTurn].id!=socket.id) return;
     game.createLine(startPosition, endPosition, game.currentTurn);
     sendGameState(game);
-    io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames()); //Sends updated player list
+    io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
   });
+
 
   socket.on("leave", () => { //If leave event is sent
     if (!(socket.id in roomCodes)) return;

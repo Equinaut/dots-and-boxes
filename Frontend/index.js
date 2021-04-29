@@ -235,25 +235,20 @@ socket.on("gameState", (msg) => {
   squares = newSquares;
   //Replace originals
   document.getElementById("gameEndControls").hidden = !(showAdmin && msg.finished)
-  for (let playerList of document.getElementsByClassName("playerList")) {
-    for (let i=0; i<playerList.childElementCount; i++) {
-      if (i==currentTurn) playerList.children[i].classList.add("currentTurn");
-      else playerList.children[i].classList.remove("currentTurn");
-    }
-  }
-  if (currentTurn == playerNumber && !msg.finished) {
+
+  if (msg.finished) { //If game finished
+    document.getElementById("playerTurn").innerText="Waiting for game to start";
+    document.getElementById("topBar").classList.remove("currentTurn");
+    document.getElementById("topBar").classList.add("waitingForNewGame");
+  } else if (currentTurn == playerNumber) {
     document.getElementById("playerTurn").innerText="Your turn";
     document.getElementById("topBar").classList.add("currentTurn");
     document.getElementById("topBar").classList.remove("waitingForNewGame");
-  } else if (!(msg.finished)) {
+  } else {
     selected = false;
     document.getElementById("playerTurn").innerText="Waiting for other players";
     document.getElementById("topBar").classList.remove("currentTurn");
     document.getElementById("topBar").classList.remove("waitingForNewGame");
-  } else {
-    document.getElementById("playerTurn").innerText="Waiting for game to start";
-    document.getElementById("topBar").classList.remove("currentTurn");
-    document.getElementById("topBar").classList.add("waitingForNewGame");
   }
 
   console.log(msg);
@@ -270,15 +265,26 @@ socket.on("playerList", (players) => { //When playerlist received from server
       let newPlayerRow = document.createElement("div");
       let newPlayer = document.createElement("p");
       newPlayer.innerText = (player.number+1)+". "+player.name;
-      if (PHASE==2) newPlayer.innerText = (player.number+1)+". "+player.name+ " | "+(player.score || 0) + " points";
+      if (PHASE == 2) {
+        newPlayer.innerText = (player.number+1)+". "+player.name +
+                               " | " + (player.score || 0) + " point" + {true: "s", false:""}[player.score!=1] +
+                               " | " + (player.wins || 0) + " win" + {true: "s", false:""}[player.wins!=1];
+      }
+
       //Add player number and name to p tag in row
       newPlayerRow.classList.add("player"); //Add the player class to this
 
+      if (PHASE == 2 && player.number == currentTurn) newPlayerRow.classList.add("currentTurn");
       let colourSample = document.createElement("div");
       //Div to show the colour that this player is
-      colourSample.style.background=player.colour;
-      colourSample.classList.add("colourSample");
+      let pattern = player.pattern;
+      if (pattern.pattern == 1) {
+        colourSample.style.background = pattern.colour;
+      } else {
+        colourSample.style.background = "white";
+      }
 
+      colourSample.classList.add("colourSample");
       if (player.number == playerNumber) newPlayerRow.classList.add("thisPlayer");
 
       newPlayerRow.appendChild(newPlayer);
@@ -289,6 +295,7 @@ socket.on("playerList", (players) => { //When playerlist received from server
   }
 });
 
+
 socket.on("gridSize", (width, height) => {
   document.getElementById("widthInput").value = width;
   document.getElementById("heightInput").value = height;
@@ -298,4 +305,5 @@ socket.on("gridSize", (width, height) => {
   GRID_HEIGHT = height;
 });
 
-setInterval(draw, 5); //Calls the draw function every 5 ms
+
+setInterval(draw, 50); //Calls the draw function every 50 ms
