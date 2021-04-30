@@ -60,7 +60,7 @@ function drawGrid() {
   //Draw lines
   for (let line of lines) line.draw(); //Draws every line object
 
-  let canvasContext = boardCanvas.getContext("2d");
+  let canvasContext = boardCanvas.getContext("2d"); //Draw dots of board
   for (let x = 0; x < GRID_WIDTH; x++) {
     for (let y = 0; y < GRID_HEIGHT; y++) {
       canvasContext.fillStyle = "black";
@@ -90,11 +90,21 @@ function draw() {
     else if (PHASE==2 && element.classList.contains("Game")) element.hidden = false;
     else element.hidden = true;
   }
-  if (PHASE == 0) {
 
-  } else if (PHASE == 1) {
+  if (PHASE == 1 || PHASE == 2) {
+    //Draw previews of players square in the playerList
 
-  } else if (PHASE == 2) {
+    for (let element of document.getElementsByClassName("playerList")) {
+      for (let i=0; i < allPlayers.length; i++) {
+        for (let colourSample of element.children[i].getElementsByClassName("colourSample")) {
+          let canvasContext = colourSample.getContext("2d");
+          let pattern = allPlayers[i].pattern;
+          drawSquare(canvasContext, pattern, 0, 0, 300);
+        }
+      }
+    }
+  }
+  if (PHASE == 2) {
     drawGrid();
   }
 }
@@ -275,16 +285,9 @@ socket.on("playerList", (players) => { //When playerlist received from server
       newPlayerRow.classList.add("player"); //Add the player class to this
 
       if (PHASE == 2 && player.number == currentTurn) newPlayerRow.classList.add("currentTurn");
-      let colourSample = document.createElement("div");
-      //Div to show the colour that this player is
-      let pattern = player.pattern;
-      if (pattern.pattern == 1) {
-        colourSample.style.background = pattern.colour;
-      } else {
-        colourSample.style.background = "white";
-      }
-
+      let colourSample = document.createElement("canvas");
       colourSample.classList.add("colourSample");
+
       if (player.number == playerNumber) newPlayerRow.classList.add("thisPlayer");
 
       newPlayerRow.appendChild(newPlayer);

@@ -147,7 +147,7 @@ io.on("connection", (socket) => {
 
     for (let player of game.players) {
       if (player.id==socket.id) {
-        player.colour = colour;
+        player.pattern.colour = colour;
         io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames()); //Updates playerlist
         return;
       }
@@ -208,10 +208,10 @@ io.on("connection", (socket) => {
     let gameCode = roomCodes[socket.id];
     if (gameCode==null) return;
     io.to("Room:"+gameCode).emit("gameEnd");
+    if (!(gameCode in games)) return;
     for (let player of games[gameCode].players) {
       delete roomCodes[player.id];
     }
-    if (!(gameCode in games)) return;
     delete games[gameCode];
     io.of("/").adapter.rooms.delete("Room:"+gameCode);
   });
@@ -221,10 +221,10 @@ io.on("connection", (socket) => {
     let gameCode = roomCodes[socket.id];
     if (gameCode==null) return;
     io.to("Room:"+gameCode).emit("gameEnd");
-    for (let player of games[gameCode].players) {
-      delete roomCodes[player.id];
-    }
     if (!(gameCode in games)) return;
+    for (let player of games[gameCode].players) {
+      if (player.id in roomCodes) delete roomCodes[player.id];
+    }
     delete games[gameCode];
     io.of("/").adapter.rooms.delete("Room:"+gameCode);
   });
