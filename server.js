@@ -50,7 +50,6 @@ function sendGameState(game) { //Sends the current game state, whenever an updat
 }
 
 io.on("connection", (socket) => {
-
   socket.on("joinGame", (code, cookies) => { //When ever a user tries to join a room
     if (code=="" || code==null) return;
     if (!(code in games)) {
@@ -75,7 +74,7 @@ io.on("connection", (socket) => {
     let admin = false; //Check if admin access
     if (game.players.length==0) admin = true;
 
-    cookies = cookies.split("; ");
+    cookies = (cookies || "").split("; ");
     let cookiesParsed = {};
     for (let cookie of cookies) cookiesParsed[cookie.split("=")[0]] = cookie.split("=")[1];
     if (cookiesParsed.admin=="true") admin = true;

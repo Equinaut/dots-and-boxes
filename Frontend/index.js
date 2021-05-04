@@ -36,6 +36,7 @@ function createLine(startPosition, endPosition) { //Creates a new line with the 
     socket.emit("move", newLine.startPosition, newLine.endPosition);
   }
   delete newLine; //Deletes new line object
+
   return doesntExist; //Returns boolean, if the new line was created or not
 }
 
@@ -310,3 +311,10 @@ socket.on("gridSize", (width, height) => {
 
 
 setInterval(draw, 50); //Calls the draw function every 50 ms
+
+
+//Starts Game if a room is defined in the url params
+let searchParams = new URLSearchParams(window.location.search);
+if (searchParams.get("room") != null) {
+  socket.emit("joinGame", searchParams.get("room")); //Join room defined in URL params
+}
