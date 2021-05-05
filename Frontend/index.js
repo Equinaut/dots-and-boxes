@@ -1,4 +1,4 @@
-const socket = io("http://dotsandboxes.jamescameron.me");
+const socket = io("https://dotsandboxes.jamescameron.me");
 
 let PHASE = 0;
 //Phase is 0 on menu screen
