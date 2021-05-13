@@ -11,7 +11,7 @@ body, .section  {
 .JoinMenu,.WaitingRoom {
   padding: 25px;
 }
-button {
+button, input {
   padding: 5px;
 }
 
@@ -21,13 +21,23 @@ button {
   max-width: 500px;
   margin: auto;
 }
-.waitingRoomContainer {
+.waitingRoomContainer,.joinContainer {
   flex-direction: column;
 }
 #gameIdInput {
   flex-grow: 1;
 }
-
+#colourInput {
+  padding: 2px;
+  height: 2em;
+}
+.slider {
+  padding: 0;
+}
+.joinForm {
+  width: 100%;
+  display: flex;
+}
 
 /* Waiting Room */
 #roomDisplay {
@@ -97,7 +107,7 @@ button {
   padding-right: 20px;
   background: orange;
   display: flex;
-  margin-right: 1em;
+
 }
 .playerTurn {
   margin: 0;

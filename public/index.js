@@ -1,30 +1,33 @@
-const socket = io("https://dotsandboxes.jamescameron.me");
+const socket = io(SERVER_ADDRESS);
 
 let PHASE = 0;
-//Phase is 0 on menu screen
-//Phase is 1 in waiting room
-//Phase is 2 in game
+//Phase is 0 in waiting room
+//Phase is 1 in game
 
 let DEFAULT_WIDTH = 5; //Default width of grid in dots
 let DEFAULT_HEIGHT = 5; //Default height of grid in dots
-let GRID_WIDTH = 5; //Width of the grid in dots
-let GRID_HEIGHT = 5; //Height of the grid in dots
 let SQUARE_SIZE = 100; //Distance between dots in pixels
 
 let allPlayers = [];
 let currentTurn = 0;
-let playerNumber = 0;
 let boardCanvas; //DOM element of HTML canvas
 let mouseX = mouseY = 0; //Mouse X and Y position relative to canvas updated whenever mouse is moved
 let mouseDown = false; //If the mouse is pressed or not
 let dragStartPosition; //Start location of mouse drag
-let showAdmin = false; //Whether or not to show the admin only settings
 
 let selected = false; //If a dot is selected
 let selectedPosition; //Position of selected dot
 
 let lines = []; //Array of line objects
 let squares = [];
+
+if (document.getElementById("widthInput")) document.getElementById("widthInput").value = GRID_WIDTH;
+if (document.getElementById("heightInput")) document.getElementById("heightInput").value = GRID_HEIGHT;
+document.getElementById("widthDisplay").innerText = GRID_WIDTH;
+document.getElementById("heightDisplay").innerText = GRID_HEIGHT;
+
+if (showAdmin==null) showAdmin = false;
+for (let element of document.getElementsByClassName("adminSetting")) element.hidden = !showAdmin;
 
 function createLine(startPosition, endPosition) { //Creates a new line with the given coordinates
   let newLine = new Line(startPosition, endPosition); //New line object
@@ -86,26 +89,25 @@ function drawGrid() {
 
 function draw() {
   for (let element of document.getElementsByClassName("section")) {
-    if (PHASE==0 && element.classList.contains("JoinMenu")) element.hidden = false;
-    else if (PHASE==1 && element.classList.contains("WaitingRoom")) element.hidden = false;
-    else if (PHASE==2 && element.classList.contains("Game")) element.hidden = false;
+    if (PHASE==0 && element.classList.contains("WaitingRoom")) element.hidden = false;
+    else if (PHASE==1 && element.classList.contains("Game")) element.hidden = false;
     else element.hidden = true;
   }
 
-  if (PHASE == 1 || PHASE == 2) {
-    //Draw previews of players square in the playerList
 
-    for (let element of document.getElementsByClassName("playerList")) {
-      for (let i=0; i < allPlayers.length; i++) {
-        for (let colourSample of element.children[i].getElementsByClassName("colourSample")) {
-          let canvasContext = colourSample.getContext("2d");
-          let pattern = allPlayers[i].pattern;
-          drawSquare(canvasContext, pattern, 0, 0, 300);
-        }
+  //Draw previews of players square in the playerList
+
+  for (let element of document.getElementsByClassName("playerList")) {
+    for (let i=0; i < allPlayers.length; i++) {
+      for (let colourSample of element.children[i].getElementsByClassName("colourSample")) {
+        let canvasContext = colourSample.getContext("2d");
+        let pattern = allPlayers[i].pattern;
+        drawSquare(canvasContext, pattern, 0, 0, 300);
       }
     }
   }
-  if (PHASE == 2) {
+
+  if (PHASE == 1) {
     drawGrid();
   }
 }
@@ -165,25 +167,13 @@ function colourChange() {
 }
 document.getElementById("colourInput").addEventListener("input", () => colourChange());
 
-document.getElementById("widthInput").addEventListener("input", () => sizeChange("width"));
-document.getElementById("heightInput").addEventListener("input", () => sizeChange("height"));
+if (document.getElementById("widthInput")) document.getElementById("widthInput").addEventListener("input", () => sizeChange("width"));
+if (document.getElementById("heightInput")) document.getElementById("heightInput").addEventListener("input", () => sizeChange("height"));
 
-document.getElementById("gameIdInput").addEventListener("keydown", (e) => {
-  if (!e) return;
-  if (e.keyCode==13) joinGame();
-});
 document.getElementById("usernameInput").addEventListener("keydown", (e) => {
   if (!e) return;
   if (e.keyCode==13) changeUsername();
 })
-
-function joinGame() {
-  let code = document.getElementById("gameIdInput").value;
-  document.getElementById("gameIdInput").value = "";
-  console.log(code);
-  socket.emit("joinGame", code, document.cookie);
-}
-
 function leave() {
   socket.emit("leave");
 }
@@ -201,27 +191,14 @@ function changeUsername() {
 }
 
 socket.on("gameEnd", () => {
-  PHASE = 0;
-  console.log("Game ended");
+  console.log("Gameover");
+  location.href='/';
+});
+socket.on("disconnect", () => {
+  console.log("Gameover");
+  location.href='/';
 });
 
-socket.on("gameJoin", (msg) => {
-  if (msg.success) {
-    PHASE = 1;
-    console.log(msg);
-    playerNumber = msg.playerNumber || 0;
-    showAdmin = msg.admin;
-    if (showAdmin==null) showAdmin = false;
-    for (let element of document.getElementsByClassName("adminSetting")) element.hidden = !showAdmin;
-
-    document.getElementById("widthInput").value = msg.width || DEFAULT_WIDTH;
-    document.getElementById("heightInput").value = msg.height || DEFAULT_HEIGHT;
-    document.getElementById("widthDisplay").innerText = msg.width || DEFAULT_WIDTH;
-    document.getElementById("heightDisplay").innerText = msg.height || DEFAULT_HEIGHT;
-    document.getElementById("roomDisplay").innerText = msg.room || undefined;
-  }
-  else alert(msg.errorMessage || "Unknown error");
-});
 
 socket.on("gameStart", (msg) => {
   console.log("Starting game", msg);
@@ -230,7 +207,7 @@ socket.on("gameStart", (msg) => {
   GRID_WIDTH = msg.width || DEFAULT_WIDTH;
   GRID_HEIGHT = msg.height || DEFAULT_HEIGHT;
   startGame(msg.width || DEFAULT_WIDTH, msg.height || DEFAULT_HEIGHT);
-  PHASE = 2;
+  PHASE = 1;
 });
 
 socket.on("gameState", (msg) => {
@@ -276,7 +253,7 @@ socket.on("playerList", (players) => { //When playerlist received from server
       let newPlayerRow = document.createElement("div");
       let newPlayer = document.createElement("p");
       newPlayer.innerText = (player.number+1)+". "+player.name;
-      if (PHASE == 2) {
+      if (PHASE == 1) {
         newPlayer.innerText = (player.number+1)+". "+player.name +
                                " | " + (player.score || 0) + " point" + {true: "s", false:""}[player.score!=1] +
                                " | " + (player.wins || 0) + " win" + {true: "s", false:""}[player.wins!=1];
@@ -285,7 +262,7 @@ socket.on("playerList", (players) => { //When playerlist received from server
       //Add player number and name to p tag in row
       newPlayerRow.classList.add("player"); //Add the player class to this
 
-      if (PHASE == 2 && player.number == currentTurn) newPlayerRow.classList.add("currentTurn");
+      if (PHASE == 1 && player.number == currentTurn) newPlayerRow.classList.add("currentTurn");
       let colourSample = document.createElement("canvas");
       colourSample.classList.add("colourSample");
 
@@ -301,8 +278,8 @@ socket.on("playerList", (players) => { //When playerlist received from server
 
 
 socket.on("gridSize", (width, height) => {
-  document.getElementById("widthInput").value = width;
-  document.getElementById("heightInput").value = height;
+  if (document.getElementById("widthInput")) document.getElementById("widthInput").value = width;
+  if (document.getElementById("heightInput")) document.getElementById("heightInput").value = height;
   document.getElementById("widthDisplay").innerText = width;
   document.getElementById("heightDisplay").innerText = height;
   GRID_WIDTH = width;
@@ -311,10 +288,3 @@ socket.on("gridSize", (width, height) => {
 
 
 setInterval(draw, 50); //Calls the draw function every 50 ms
-
-
-//Starts Game if a room is defined in the url params
-let searchParams = new URLSearchParams(window.location.search);
-if (searchParams.get("room") != null) {
-  socket.emit("joinGame", searchParams.get("room")); //Join room defined in URL params
-}

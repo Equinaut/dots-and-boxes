@@ -10,17 +10,10 @@
       <h1>Dots and Boxes</h1>
     </div>
 
-     <div class="section JoinMenu">
-       <div class="container joinContainer">
-           <input id="gameIdInput" placeholder="Room Code"> </input>
-           <button onclick="joinGame()">Join Game</button>
-       </div>
-     </div>
-
-     <div class="section WaitingRoom" hidden>
+     <div class="section WaitingRoom">
        <div class="container waitingRoomContainer">
          <h2>Waiting Room</h2>
-         <p>You are currently in waiting room <span id="roomDisplay"> </span></p>
+         <p>You are currently in waiting room <span id="roomDisplay"><%= room %></span></p>
 
          <div class="settings">
            <div class="setting" id="username">
@@ -44,18 +37,20 @@
            <button id="leaveButton" class="setting" onclick="leave()">Leave waiting room</button>
 
 
-           <button class="setting adminSetting" onclick="startGameButton()">Start game</button>
+
+           <% if (admin) { %><button class="setting adminSetting" onclick="startGameButton()">Start game</button><% } %>
            <div class="setting size">
              <div class="sliderContainer">
                <p>Width: <span id="widthDisplay"> 5 </span></p>
-               <input class="slider adminSetting" type="range" id="widthInput" min=2 max=15 value=5 />
+               <% if (admin) { %><input class="slider adminSetting" type="range" id="widthInput" min=2 max=15 value=5 /><% } %>
              </div>
              <div class="sliderContainer">
                <p>Height: <span id="heightDisplay"> 5 </span> </p>
-               <input class="slider adminSetting" type="range" id="heightInput" min=2 max=15 value=5 />
+               <% if (admin) { %><input class="slider adminSetting" type="range" id="heightInput" min=2 max=15 value=5 /><% } %>
              </div>
-
            </div>
+
+
          </div>
           <div class="playerList"> </div>
        </div>
@@ -80,6 +75,15 @@
    </div>
 
 
+  <script>
+    //Some vars are passed in to code
+    let GRID_WIDTH = <%= width %>; //Width of the grid in dots
+    let GRID_HEIGHT = <%= height %>; //Height of the grid in dots
+    let SERVER_ADDRESS = "<%= SERVER_ADDRESS %>";
+    let playerNumber = <%= playerNumber %>;
+    let showAdmin = <%= admin %>;
+
+  </script>
   <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
   <script src="/square.js"></script>
   <script src="/game.js"></script>
