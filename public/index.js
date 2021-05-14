@@ -89,8 +89,13 @@ function drawGrid() {
 
 function draw() {
   for (let element of document.getElementsByClassName("section")) {
-    if (PHASE==0 && element.classList.contains("WaitingRoom")) element.hidden = false;
-    else if (PHASE==1 && element.classList.contains("Game")) element.hidden = false;
+    if (PHASE==0 && element.classList.contains("WaitingRoom")) {
+      element.hidden = false;
+      for (let element2 of document.getElementsByClassName("containerOuter")) element2.classList.remove("fullHeight");
+    } else if (PHASE==1 && element.classList.contains("Game")) {
+      element.hidden = false;
+      for (let element2 of document.getElementsByClassName("containerOuter")) element2.classList.add("fullHeight");
+    }
     else element.hidden = true;
   }
 
@@ -170,10 +175,12 @@ document.getElementById("colourInput").addEventListener("input", () => colourCha
 if (document.getElementById("widthInput")) document.getElementById("widthInput").addEventListener("input", () => sizeChange("width"));
 if (document.getElementById("heightInput")) document.getElementById("heightInput").addEventListener("input", () => sizeChange("height"));
 
-document.getElementById("usernameInput").addEventListener("keydown", (e) => {
-  if (!e) return;
-  if (e.keyCode==13) changeUsername();
-})
+if (document.getElementById("usernameInput")) {
+  document.getElementById("usernameInput").addEventListener("keydown", (e) => {
+    if (!e) return;
+    if (e.keyCode==13) changeUsername();
+  });
+}
 function leave() {
   socket.emit("leave");
 }
@@ -184,6 +191,7 @@ function restartGame() {
   socket.emit("restart");
 }
 function changeUsername() {
+  if (document.getElementById("usernameInput")==null) return;
   let name = document.getElementById("usernameInput").value;
   document.getElementById("usernameInput").value = "";
   console.log(name);
@@ -252,9 +260,9 @@ socket.on("playerList", (players) => { //When playerlist received from server
       //Create item for list
       let newPlayerRow = document.createElement("div");
       let newPlayer = document.createElement("p");
-      newPlayer.innerText = (player.number+1)+". "+player.name;
+      newPlayer.innerHTML = (player.number+1)+". <span role=" + player.role + ">" + player.name + "</span>";
       if (PHASE == 1) {
-        newPlayer.innerText = (player.number+1)+". "+player.name +
+        newPlayer.innerHTML = (player.number+1)+". <span role=" + player.role + ">" + player.name + "</span>" +
                                " | " + (player.score || 0) + " point" + {true: "s", false:""}[player.score!=1] +
                                " | " + (player.wins || 0) + " win" + {true: "s", false:""}[player.wins!=1];
       }

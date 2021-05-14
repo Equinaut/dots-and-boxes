@@ -5,23 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-  <div id="container">
-    <div id="titleBar">
-      <h1>Dots and Boxes</h1>
-    </div>
 
-     <div class="section JoinMenu">
-       <div class="container joinContainer">
-         <% if (error!=null) { %>
-          <p id="errorMessage"><%= error.message %></p>
-          <% } %>
-         <form action="/" method="POST" class="joinForm">
-           <input type="text" id="gameIdInput" placeholder="Room Code" name="code"> </input>
-           <input type="submit" value="Join Game"></input>
-         </form>
-       </div>
-     </div>
+  <div id="titleBar">
+    <h1>Dots and Boxes</h1>
+  </div>
 
-   </div>
+  <div class="container">
+    <% if (error!=null) { %>
+      <p id="errorMessage"><%= error.message %></p>
+    <% } %>
+
+    <form action="/" method="POST" class="joinForm">
+        <input type="text" placeholder="Room code" name="code" />
+        <input type="submit" value="Join Game" />
+    </form>
+    <% if (loggedIn!=true) { %>
+      <a href="/login"><button>Login</button></a>
+      <a href="/register"><button>Register </button> </a>
+    <% } else {%>
+      <a href="/profile"><button>View account</button></a>
+    <% }%>
+  </div>
+
 </body>
 </html>

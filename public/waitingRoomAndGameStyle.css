@@ -1,0 +1,170 @@
+body, .section  {
+  height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+.containerOuter {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+.containerInner {
+  padding: 25px;
+  display: flex;
+  max-width: 500px;
+  margin: auto;
+  flex-direction: column;
+}
+button, input {
+  padding: 5px;
+}
+.fullHeight {
+  height: 100%;
+}
+/* Waiting Room */
+#roomDisplay {
+  font-weight: bold;
+}
+
+.settings {
+  margin: 10px;
+}
+
+#username {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#username>* {
+  flex-shrink: 1;
+  flex-grow: 1;
+}
+
+#username>button {
+  max-width: 300px;
+}
+
+.setting {
+  width: 100%;
+  margin: 5px;
+}
+
+.adminSettings>h3 {
+  margin: 5px;
+}
+
+.sliderContainer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sliderContainer>p {
+  width: 6em;
+}
+
+.sliderContainer>input {
+  flex-grow: 1;
+  margin: 0 3em;
+}
+
+/* Main Game Screen */
+
+.player {  /* Player object in player list */
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  margin: -3px 10px 0 10px;
+  border: solid 3px;
+}
+
+.player>p {
+  padding: 5px;
+}
+
+.playerList {
+  margin: 4px 0;
+}
+.topBar {
+  padding: 8px;
+  padding-right: 20px;
+  background: orange;
+  display: flex;
+
+}
+.playerTurn {
+  margin: 0;
+  padding: 8px;
+  flex-grow: 1;
+}
+
+.colourSample {
+  border: solid 5px;
+  width: 50px;
+  height: 50px;
+}
+
+.currentTurn {
+  background: #92ff45;
+}
+.waitingForNewGame {
+  background: yellow;
+}
+
+.thisPlayer {
+  border: solid 5px;
+}
+
+#gameContainerOuter {
+  display: flex;
+  flex-flow: row;
+  height: 100%;
+  justify-content: space-between;
+}
+
+#gameContainerInner {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 200px;
+}
+
+#sidebar {
+  flex-basis: 350px;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+#board {
+  flex-grow: 1;
+  min-width: 200px;
+  min-height: 200px;
+  margin: 4px;
+}
+
+#titleBar {
+  padding: 20px;
+  margin-bottom: 10px;
+  border-bottom: solid 3px;
+}
+
+@media only screen and (max-width: 750px) {
+  #gameContainerInner, #board {
+    width: 100vw;
+    height: 100vw;
+    flex-grow: 0;
+  }
+  .containerOuter,.waitingRoomContainer {
+    height: auto;
+  }
+  #gameContainerOuter {
+    flex-flow: column;
+  }
+
+  #sidebar {
+    flex-basis: 0;
+    flex-grow: 0;
+    flex-shrink: 0;
+  }
+}

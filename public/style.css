@@ -1,163 +1,6 @@
-body, .section  {
+body  {
   height: 100%;
   margin: 0;
-  overflow-x: hidden;
-}
-#container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-.JoinMenu,.WaitingRoom {
-  padding: 25px;
-}
-button, input {
-  padding: 5px;
-}
-
-/* Join Screen */
-.section>.container {
-  display: flex;
-  max-width: 500px;
-  margin: auto;
-}
-.waitingRoomContainer,.joinContainer {
-  flex-direction: column;
-}
-#gameIdInput {
-  flex-grow: 1;
-}
-#colourInput {
-  padding: 2px;
-  height: 2em;
-}
-.slider {
-  padding: 0;
-}
-.joinForm {
-  width: 100%;
-  display: flex;
-}
-
-/* Waiting Room */
-#roomDisplay {
-  font-weight: bold;
-}
-
-.settings {
-  margin: 10px;
-}
-
-#username {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-#username>* {
-  flex-shrink: 1;
-  flex-grow: 1;
-}
-
-#username>button {
-  max-width: 300px;
-}
-
-.setting {
-  width: 100%;
-  margin: 5px;
-}
-
-.adminSettings>h3 {
-  margin: 5px;
-}
-
-.sliderContainer {
-  display: flex;
-  justify-content: space-between;
-}
-
-.sliderContainer>p {
-  width: 6em;
-}
-
-.sliderContainer>input {
-  flex-grow: 1;
-  margin: 0 3em;
-}
-
-/* Main Game Screen */
-
-.player {  /* Player object in player list */
-  padding: 10px;
-  display: flex;
-  justify-content: space-between;
-  margin: -3px 10px 0 10px;
-  border: solid 3px;
-}
-
-.player>p {
-  padding: 5px;
-}
-
-.playerList {
-  margin: 4px 0;
-}
-.topBar {
-  padding: 8px;
-  padding-right: 20px;
-  background: orange;
-  display: flex;
-
-}
-.playerTurn {
-  margin: 0;
-  padding: 8px;
-  flex-grow: 1;
-}
-
-.colourSample {
-  border: solid 5px;
-  width: 50px;
-  height: 50px;
-}
-
-.currentTurn {
-  background: #92ff45;
-}
-.waitingForNewGame {
-  background: yellow;
-}
-
-.thisPlayer {
-  border: solid 5px;
-}
-
-#gameContainerOuter {
-  display: flex;
-  flex-flow: row;
-  height: 100%;
-  justify-content: space-between;
-}
-
-#gameContainerInner {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  flex-shrink: 1;
-  min-width: 200px;
-}
-
-#sidebar {
-  flex-basis: 350px;
-  flex-grow: 1;
-  flex-shrink: 1;
-}
-
-#board {
-  flex-grow: 1;
-  min-width: 200px;
-  min-height: 200px;
-  margin: 4px;
 }
 
 #titleBar {
@@ -166,22 +9,44 @@ button, input {
   border-bottom: solid 3px;
 }
 
-@media only screen and (max-width: 750px) {
-  #gameContainerInner, #board {
-    width: 100vw;
-    height: 100vw;
-    flex-grow: 0;
-  }
-  #container {
-    height: auto;
-  }
-  #gameContainerOuter {
-    flex-flow: column;
-  }
+.container {
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  width: 100%;
+  max-width: 500px;
+}
+#errorMessage {
+  text-align: center;
+  margin-bottom: 0;
+}
 
-  #sidebar {
-    flex-basis: 0;
-    flex-grow: 0;
-    flex-shrink: 0;
-  }
+form {
+  box-sizing: border-box;
+  width: 100%;
+  text-align: center;
+}
+
+input, button {
+  box-sizing: border-box;
+  text-align: center;
+  padding: 1em;
+  margin: 8px 0;
+  width: 100%;
+
+  font-size: large;
+  border-radius: 2em;
+}
+input:focus {
+  outline: none;
+  background: yellow;
+}
+input[type=submit]:focus {
+  outline: none;
+  background: lime;
+}
+
+.container {
+  box-sizing: border-box;
+  padding: 3em;
 }

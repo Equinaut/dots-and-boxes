@@ -1,0 +1,40 @@
+<html>
+<head>
+  <title>Dots and Boxes </title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+  <div id="titleBar">
+    <h1>Dots and Boxes</h1>
+  </div>
+
+  <div class="container">
+    <% if (error!=null) { %>
+      <p id="errorMessage"><%= error.message %></p>
+    <% } %>
+
+    <form action="/register" method="POST" id="registerForm">
+        <input type="text" placeholder="Username" name="username" maxlength="25" minlength="3" required/>
+        <input type="password" placeholder="Password" name="password" id="passwordinput" minlength="8" required/>
+        <input type="password" placeholder="Confirm Password" name="confirmpassword" id="confirmpasswordinput" required/>
+        <input type="submit" value="Register account" />
+    </form>
+    <a href="/"><button>Home </button> </a>
+  </div>
+
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", (event) => {
+      if (document.getElementById("passwordinput").value != document.getElementById("confirmpasswordinput").value) {
+        event.preventDefault();
+        alert("Password and confirm password do not match, please fix this and submit again.");
+        document.getElementById("confirmpasswordinput").value = "";
+        document.getElementById("confirmpasswordinput").focus();
+      }
+
+    });
+  </script>
+</body>
+</html>

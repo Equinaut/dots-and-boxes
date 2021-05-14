@@ -1,25 +1,28 @@
 <html>
 <head>
   <title>Dots and Boxes </title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="waitingRoomAndGameStyle.css">
+  <link rel="stylesheet" href="userStyles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-  <div id="container">
+  <div class="containerOuter">
     <div id="titleBar">
       <h1>Dots and Boxes</h1>
     </div>
 
      <div class="section WaitingRoom">
-       <div class="container waitingRoomContainer">
+       <div class="containerInner waitingRoomContainer">
          <h2>Waiting Room</h2>
          <p>You are currently in waiting room <span id="roomDisplay"><%= room %></span></p>
 
          <div class="settings">
-           <div class="setting" id="username">
-             <input id="usernameInput" placeholder="Username" maxlength=25></input>
-             <button onclick="changeUsername()">Change username</button><br>
-           </div>
+           <% if (role==-1) { %>
+             <div class="setting" id="username">
+               <input id="usernameInput" placeholder="Username" maxlength=25></input>
+               <button onclick="changeUsername()">Change username</button><br>
+             </div>
+           <% } %>
 
            <input id="colourInput" class="setting" type="color" list="presetColors">
            <datalist id="presetColors">

@@ -44,9 +44,6 @@ const PORT = process.env.PORT || 3000;
 //Set public folder to serve static content
 app.use(express.static('public'));
 
-
-//Routes
-
 app.get('/', (req, res) => {
   let roomCode = req.query.room;
   if (roomCode!=null) {
@@ -57,7 +54,7 @@ app.get('/', (req, res) => {
   let error = null;
   if (req.session.error != null) error = req.session.error;
   req.session.error = null;
-  res.render("joinScreen", {error: error});
+  res.render("joinScreen", {error: error, loggedIn: req.session.loggedIn});
 });
 
 app.get("/play", (req, res) => {
@@ -75,17 +72,22 @@ app.get("/play", (req, res) => {
   }
 
   let playerNum = 0;
+  let admin = false;
+  let role = -1;
   for (let player of game.players) {
-    if (player.id==req.sessionID) {
+    if (player.id==req.session.playerId) {
       playerNum = player.number;
+      admin = player.admin;
+      role = player.role;
     }
   }
-  admin = playerNum==0; //Give first player in the room admin access in that room
+
   res.render("gameAndWaitingRoom", {
     playerNumber: playerNum,
     width: game.width,
     height: game.height,
     room: game.room,
+    role: role,
     admin: admin,
     SERVER_ADDRESS: process.env.SERVER_ADDRESS
   });
@@ -100,6 +102,15 @@ app.post('/', (req, res) => {
   joinOrCreateGame(code, req, res);
 });
 
+app.post('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+app.use('/register', require('./routes/register'));
+app.use('/login', require('./routes/login'));
+app.use('/profile', require('./routes/profile'));
+
 app.get('*', (req, res) => {
   res.redirect("/");
 });
@@ -109,23 +120,39 @@ function joinOrCreateGame(code, req, res) {
     games[code] = new Game(code);
   }
   let game = games[code];
+  req.session.playerId = req.sessionID;
+  if (req.session.loggedIn) req.session.playerId = req.session.user._id;
 
   for (let player of game.players) {
-    if (player.id==req.sessionID) {
+    if (player.id==req.session.playerId) {
       req.session.error = {message: "You are already in this game."};
-      res.redirect("/");
-      return;
+      return res.redirect("/");
     }
   }
 
   let playerNum = 0;
   if (game.players.length > 0) playerNum = game.players[game.players.length-1].number+1;
 
+  let role = -1;
+  let name = null;
+  if (req.session.loggedIn==true) {
+    if (req.session.user.role==0 || req.session.user.role==null) {
+      req.session.error = {message: "Your account is not activated, please wait while your account is activated before you can play games."};
+      return res.redirect("/");
+    }
+    role = req.session.user.role;
+    name = req.session.user.displayName;
+  }
+
   let admin = false; //Check if admin access
   if (game.players.length==0) admin = true;
+  if (req.session.loggedIn && (req.session.user.role == 2 || req.session.user.role == 3)) admin = true; //Give admins and moderators admin access in any room they join
+
+
+  let newPlayer = new Player(req.session.playerId, playerNum, admin, role, name);
 
   //New player created
-  game.players.push(new Player(req.sessionID, playerNum, admin)); //Add new player object to room
+  game.players.push(newPlayer); //Add new player object to room
 
   if (game.started) {
     req.session.error = {message: "Game has already started"}
@@ -136,6 +163,7 @@ function joinOrCreateGame(code, req, res) {
     res.redirect("/play")
   }
 }
+
 function sendGameState(game) { //Sends the current game state, whenever an update happens such as someone placing a line
   io.to("Room:"+game.room).emit("gameState",
     {
@@ -146,9 +174,6 @@ function sendGameState(game) { //Sends the current game state, whenever an updat
     }
   );
 }
-
-
-
 
 //Socket methods
 
@@ -165,6 +190,9 @@ io.on("connection", (socket) => {
   socket.on("setName", (name) => { //When user wants to change their name
     if (! ( name.length >= 2 && name.length <= 25) ) return;
 
+    if (socket.handshake.session.loggedIn) {
+      if (socket.handshake.session.user.role != -1) return;
+    }
     let code = socket.handshake.session.roomCode;
     if (code=="" || code==null) return;
     if (!(code in games)) return;
@@ -172,11 +200,11 @@ io.on("connection", (socket) => {
     if (game==null) return;
 
     for (let player of game.players) {
-      if (player.id==socket.handshake.sessionID) {
+      if (player.id==socket.handshake.session.playerId) {
         player.name = name;
       }
     }
-    io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames());
+    io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames());
   });
 
 
@@ -188,7 +216,7 @@ io.on("connection", (socket) => {
     if (game==null) return;
 
     for (let player of game.players) {
-      if (player.id==socket.handshake.sessionID && player.admin) {
+      if (player.id==socket.handshake.session.playerId && player.admin) {
         game.width = size.width || game.width;
         game.height = size.height || game.height;
         io.to("Room:"+game.room).emit("gridSize", game.width, game.height);
@@ -205,7 +233,7 @@ io.on("connection", (socket) => {
     if (game==null) return;
 
     for (let player of game.players) {
-      if (player.id==socket.handshake.sessionID) {
+      if (player.id==socket.handshake.session.playerId) {
         player.pattern.colour = colour;
         io.to("Room:"+game.room).emit("playerList",game.updatePlayerNames()); //Updates playerlist
         return;
@@ -224,7 +252,7 @@ io.on("connection", (socket) => {
     if (game==null) return;
 
     for (let player of game.players) {
-      if (player.id==socket.handshake.sessionID && player.admin) { //Must have admin access
+      if (player.id==socket.handshake.session.playerId && player.admin) { //Must have admin access
         game.started = true;
         io.to("Room:"+code).emit("gameStart", {
           width: game.width,
@@ -244,7 +272,7 @@ io.on("connection", (socket) => {
     let game = games[code];
     if (game==null) return;
     for (let player of game.players) {
-      if (game.finished && player.id==socket.handshake.sessionID && player.admin) { //Must have admin access
+      if (game.finished && player.id==socket.handshake.session.playerId && player.admin) { //Must have admin access
         game.restart();
         sendGameState(game);
         io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
@@ -257,7 +285,7 @@ io.on("connection", (socket) => {
     let game = games[gameCode];
     if (game==null) return;
     if (!(game.started==true)) return;
-    if (game.players[game.currentTurn].id!=socket.handshake.sessionID) return;
+    if (game.players[game.currentTurn].id!=socket.handshake.session.playerId) return;
     game.createLine(startPosition, endPosition, game.currentTurn);
     sendGameState(game);
     io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
@@ -282,6 +310,7 @@ io.on("connection", (socket) => {
     io.of("/").adapter.rooms.delete("Room:"+gameCode);
   });
 })
+
 
 
 server.listen(PORT, () => { //Listens on PORT (defaults to 3000)

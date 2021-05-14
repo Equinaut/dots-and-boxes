@@ -142,13 +142,16 @@ class Game {
   updatePlayerNames() {
     let players = [];
     for (let player of this.players) {
+      let role = player.role;
+      if (role==null) role = -1;
       players.push(
         {
           name: player.name || "Unknown player",
           number: player.number || 0,
           pattern: player.pattern,
           score: player.score || 0,
-          wins: player.wins || 0
+          wins: player.wins || 0,
+          role: role
        });
     }
     return players;
