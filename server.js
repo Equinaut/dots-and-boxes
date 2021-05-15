@@ -95,25 +95,27 @@ app.get("/play", (req, res) => {
 
 app.post('/', (req, res) => {
   let code = req.body.code;
-  if (code == null) {
-    res.redirect("/");
-    return;
+  if (code == null || req.session.roomCode=="") {
+    req.session.error = {message: "Invalid room code"};
+    return res.redirect("/");
   }
   joinOrCreateGame(code, req, res);
 });
 
 app.post('/logout', (req, res) => {
-  req.session.destroy();
+  req.session.loggedIn = false;
+  req.session.user = null;
   res.redirect('/');
 });
 
+//Routes
 app.use('/register', require('./routes/register'));
 app.use('/login', require('./routes/login'));
+app.use('/account', require('./routes/profile'));
 app.use('/profile', require('./routes/profile'));
+app.use('/activate', require('./routes/activate'));
 
-app.get('*', (req, res) => {
-  res.redirect("/");
-});
+app.get('*', (req, res) => {res.redirect("/");});
 
 function joinOrCreateGame(code, req, res) {
   if (!(code in games)) {

@@ -1,6 +1,18 @@
+* {
+  --button-colour: #e7e7e7;
+  --button-hover-colour: #f0f0f0;
+  --input-focus: yellow;
+  --submit-focus: lime;
+}
+
 body  {
   height: 100%;
   margin: 0;
+}
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
 }
 
 #titleBar {
@@ -21,32 +33,57 @@ body  {
   margin-bottom: 0;
 }
 
-form {
-  box-sizing: border-box;
+form.wide {
   width: 100%;
   text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 
-input, button {
-  box-sizing: border-box;
+input, button, .button, input[type=submit] {
   text-align: center;
   padding: 1em;
   margin: 8px 0;
-  width: 100%;
-
+  flex-grow: 1;
+  flex-shrink: 1;
   font-size: large;
-  border-radius: 2em;
+  border-radius: 100vh;
 }
+
 input:focus {
   outline: none;
-  background: yellow;
+  background: var(--input-focus);
 }
-input[type=submit]:focus {
+
+input[type=submit]:focus:not(.noFocusColour) {
   outline: none;
-  background: lime;
+  background: var(--submit-focus);
+}
+
+.button, button, input[type=submit] {
+  text-decoration: none;
+  color: black;
+  background: var(--button-colour);
+  border: solid black 1px;
+}
+.button:hover, button:hover, input[type="submit"]:hover {
+  background: var(--button-hover-colour);
 }
 
 .container {
-  box-sizing: border-box;
   padding: 3em;
+}
+
+.listItem {
+  padding: 1em 1.5em;
+  border: solid 1px;
+  border-radius: 2em;
+  margin: 0.75em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.listItem * {
+  display: inline-block;
+  margin-bottom: 0;
 }

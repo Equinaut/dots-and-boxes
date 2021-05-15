@@ -2,6 +2,9 @@
 <head>
   <title>Dots and Boxes </title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="userStyles.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -15,15 +18,15 @@
       <p id="errorMessage"><%= error.message %></p>
     <% } %>
 
-    <form action="/" method="POST" class="joinForm">
+    <form action="/" method="POST" class="joinForm wide">
         <input type="text" placeholder="Room code" name="code" />
         <input type="submit" value="Join Game" />
     </form>
     <% if (loggedIn!=true) { %>
-      <a href="/login"><button>Login</button></a>
-      <a href="/register"><button>Register </button> </a>
+      <a href="/login" class="button">Login</a>
+      <a href="/register" class="button">Register</a>
     <% } else {%>
-      <a href="/profile"><button>View account</button></a>
+      <a href="/profile" class="button">View account</a>
     <% }%>
   </div>
 

@@ -2,6 +2,9 @@
 <head>
   <title>Dots and Boxes </title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="userStyles.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -15,13 +18,13 @@
       <p id="errorMessage"><%= error.message %></p>
     <% } %>
 
-    <form action="/register" method="POST" id="registerForm">
+    <form action="/register" method="POST" id="registerForm" class="wide">
         <input type="text" placeholder="Username" name="username" maxlength="25" minlength="3" required/>
         <input type="password" placeholder="Password" name="password" id="passwordinput" minlength="8" required/>
         <input type="password" placeholder="Confirm Password" name="confirmpassword" id="confirmpasswordinput" required/>
         <input type="submit" value="Register account" />
     </form>
-    <a href="/"><button>Home </button> </a>
+    <a href="/" class="button">Home</a>
   </div>
 
 

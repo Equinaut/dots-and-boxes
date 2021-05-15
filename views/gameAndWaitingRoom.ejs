@@ -3,6 +3,9 @@
   <title>Dots and Boxes </title>
   <link rel="stylesheet" href="waitingRoomAndGameStyle.css">
   <link rel="stylesheet" href="userStyles.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -20,7 +23,8 @@
            <% if (role==-1) { %>
              <div class="setting" id="username">
                <input id="usernameInput" placeholder="Username" maxlength=25></input>
-               <button onclick="changeUsername()">Change username</button><br>
+               <button onclick="changeUsername()">Change username</button>
+               <br>
              </div>
            <% } %>
 
@@ -72,6 +76,7 @@
          </div>
          <div id="sidebar">
            <div class="playerList"> </div>
+           <a href="/" class="button">Leave game</a>
          </div>
        </div>
      </div>

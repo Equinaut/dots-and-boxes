@@ -10,7 +10,11 @@ router.get('/', (req, res) => {
   let date = new Date(user.createdAt);
   let dateStringOld = date.toLocaleDateString().split("/");
   let dateString = dateStringOld[1]+"/"+dateStringOld[0]+"/"+dateStringOld[2]; //Get date in UK format
-  res.render('profile', {username: user.displayName, role: user.role, createdAt: dateString})
+  res.render('profile', {
+    username: user.displayName,
+    role: user.role,
+    createdAt: dateString
+  });
 });
 
 module.exports = router

@@ -25,6 +25,7 @@ router.post('/', async (req, res) => {
   };
 
   let findUser = await User.findOne({username: username.toLowerCase()});
+  
   if (findUser != null) {
     req.session.error = {message: "User already exists"};
     res.redirect("/register");
