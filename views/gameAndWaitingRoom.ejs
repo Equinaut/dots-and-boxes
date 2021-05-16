@@ -23,7 +23,7 @@
            <% if (role==-1) { %>
              <div class="setting" id="username">
                <input id="usernameInput" placeholder="Username" maxlength=25></input>
-               <button onclick="changeUsername()">Change username</button>
+               <button class="button" onclick="changeUsername()">Change username</button>
                <br>
              </div>
            <% } %>
@@ -41,11 +41,11 @@
            <option value="#8000ff"/>
            <option value="#ff00ff"/>
            </datalist>
-           <button id="leaveButton" class="setting" onclick="leave()">Leave waiting room</button>
+           <button id="leaveButton" class="setting button" onclick="leave()">Leave waiting room</button>
 
 
 
-           <% if (admin) { %><button class="setting adminSetting" onclick="startGameButton()">Start game</button><% } %>
+           <% if (admin) { %><button class="setting adminSetting button" onclick="startGameButton()">Start game</button><% } %>
            <div class="setting size">
              <div class="sliderContainer">
                <p>Width: <span id="widthDisplay"> 5 </span></p>
@@ -69,14 +69,16 @@
        <div id="gameContainerOuter">
          <div id="gameContainerInner">
            <div class="topBar" id="topBar">
-             <p class="playerTurn" id="playerTurn"></p>
-             <div class="gameEndControls" id="gameEndControls" hidden><button onclick="restartGame()">Restart Game</button></div>
+             <h4 class="playerTurn" id="playerTurn"></h4>
            </div>
            <canvas id="board"> </canvas>
          </div>
          <div id="sidebar">
            <div class="playerList"> </div>
-           <a href="/" class="button">Leave game</a>
+           <div class="inGameControls">
+             <a href="/" class="button">Leave game</a>
+             <% if (admin) { %><button id="gameEndControls" class="button" onclick="restartGame()">Restart Game</button><% } %>
+           </div>
          </div>
        </div>
      </div>
@@ -89,7 +91,6 @@
     let GRID_HEIGHT = <%= height %>; //Height of the grid in dots
     let SERVER_ADDRESS = "<%= SERVER_ADDRESS %>";
     let playerNumber = <%= playerNumber %>;
-    let showAdmin = <%= admin %>;
 
   </script>
   <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>

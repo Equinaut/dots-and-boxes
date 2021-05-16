@@ -26,9 +26,6 @@ if (document.getElementById("heightInput")) document.getElementById("heightInput
 document.getElementById("widthDisplay").innerText = GRID_WIDTH;
 document.getElementById("heightDisplay").innerText = GRID_HEIGHT;
 
-if (showAdmin==null) showAdmin = false;
-for (let element of document.getElementsByClassName("adminSetting")) element.hidden = !showAdmin;
-
 function createLine(startPosition, endPosition) { //Creates a new line with the given coordinates
   let newLine = new Line(startPosition, endPosition); //New line object
   let doesntExist = true;
@@ -230,7 +227,7 @@ socket.on("gameState", (msg) => {
   lines = newLines;
   squares = newSquares;
   //Replace originals
-  document.getElementById("gameEndControls").hidden = !(showAdmin && msg.finished)
+  if (document.getElementById("gameEndControls")) document.getElementById("gameEndControls").hidden = !(msg.finished)
 
   if (msg.finished) { //If game finished
     document.getElementById("playerTurn").innerText="Waiting for game to start";
