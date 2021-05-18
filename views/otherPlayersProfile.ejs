@@ -23,10 +23,10 @@
         <% if (locals.stats) { %>
           <h3><span role=<%= user.role %>> <%= user.username %>'s</span> stats </h3>
           <div class="stats">
+            <p> <%= stats.winPercentage || 0 %>% win rate</p>
             <p> <%= stats.wins || 0 %> wins </p>
-            <p> <%= stats.losses || 0%> losses </p>
-            <p> <%= stats.wlr || 0 %> win loss ratio </p>
             <p> <%= stats.draws || 0 %> draws </p>
+            <p> <%= stats.losses || 0%> losses </p>
             <p> <%= stats.gamesPlayed  || 0 %> games played </p>
             <p> <%= stats.boxes || 0 %> boxes formed </p>
           </div>

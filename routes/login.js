@@ -10,6 +10,7 @@ router.get('/', (req, res) => {
     return;
   }
   res.render('login', {error: req.session.error})
+  req.session.error = null;
 });
 
 router.post('/', async (req, res) => {

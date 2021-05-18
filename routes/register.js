@@ -14,6 +14,7 @@ router.get('/', (req, res) => {
     return;
   }
   res.render('register', {error: req.session.error})
+  req.session.error = null;
 });
 
 router.post('/', async (req, res) => {

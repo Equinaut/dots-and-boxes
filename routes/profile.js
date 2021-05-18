@@ -41,12 +41,12 @@ router.get('/:username', async (req, res) => {
       wins: 0,
       losses: 0,
       draws: 0,
-      gamesPlayed: 0,
       boxes: 0
     }
   }
-  stats.wlr = stats.wins / (stats.losses || 1);
-  
+  stats.gamesPlayed = Number.parseInt(stats.wins || 0) + Number.parseInt(stats.losses || 0) + Number.parseInt(stats.draws || 0);
+  stats.winPercentage = Math.round(100*((stats.wins / stats.gamesPlayed) || 0));
+
   let newUser = {
     username: userData.displayName,
     role: userData.role,
