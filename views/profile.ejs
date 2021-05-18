@@ -1,8 +1,8 @@
 <html>
 <head>
   <title>Dots and Boxes </title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="userStyles.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/userStyles.css">
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,9 +15,12 @@
 
   <div class="container">
     <p>Welcome back <span role=<%= role %>><%= username %></span></p>
-    <% if (createdAt) { %><p>You have been a member since <b><%= createdAt %></b></p> <% } %>
+    <% if (locals.createdAt) { %><p>You have been a member since <b><%= createdAt %></b></p> <% } %>
     <a href="/" class="button"> Play </a>
-    <form method="POST" action="/logout" class="wide"> <input value="Logout" class="noFocusColour" type="submit"/> </form>
+    <form method="POST" action="/logout" class="wide"> <input value="Logout" type="submit"/> </form>
+
+    <a class="button" href="/accountSettings">Account Settings </a>
+
     <% if (locals.role && role==3) { %>
       <h3>Admin section</h3>
       <a href="/activate" class="button"> Activate accounts </a>

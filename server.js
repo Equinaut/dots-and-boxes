@@ -97,7 +97,8 @@ app.post('/', (req, res) => {
   let code = req.body.code;
   if (code == null || req.session.roomCode=="") {
     req.session.error = {message: "Invalid room code"};
-    return res.redirect("/");
+    res.redirect("/");
+    return
   }
   joinOrCreateGame(code, req, res);
 });
@@ -114,6 +115,7 @@ app.use('/login', require('./routes/login'));
 app.use('/account', require('./routes/profile'));
 app.use('/profile', require('./routes/profile'));
 app.use('/activate', require('./routes/activate'));
+app.use('/accountSettings', require('./routes/accountSettings'));
 
 app.get('*', (req, res) => {res.redirect("/");});
 
@@ -128,7 +130,8 @@ function joinOrCreateGame(code, req, res) {
   for (let player of game.players) {
     if (player.id==req.session.playerId) {
       req.session.error = {message: "You are already in this game."};
-      return res.redirect("/");
+      res.redirect("/");
+      return;
     }
   }
 
@@ -140,7 +143,8 @@ function joinOrCreateGame(code, req, res) {
   if (req.session.loggedIn==true) {
     if (req.session.user.role==0 || req.session.user.role==null) {
       req.session.error = {message: "Your account is not activated, please wait while your account is activated before you can play games."};
-      return res.redirect("/");
+      res.redirect("/");
+      return;
     }
     role = req.session.user.role;
     name = req.session.user.displayName;
@@ -150,20 +154,18 @@ function joinOrCreateGame(code, req, res) {
   if (game.players.length==0) admin = true;
   if (req.session.loggedIn && (req.session.user.role == 2 || req.session.user.role == 3)) admin = true; //Give admins and moderators admin access in any room they join
 
-
+  if (game.started) {
+    req.session.error = {message: "Game has already started"}
+    res.redirect("/");
+    return;
+  }
   let newPlayer = new Player(req.session.playerId, playerNum, admin, role, name);
 
   //New player created
   game.players.push(newPlayer); //Add new player object to room
 
-  if (game.started) {
-    req.session.error = {message: "Game has already started"}
-    res.redirect("/");
-    return;
-  } else {
-    req.session.roomCode = code;
-    res.redirect("/play")
-  }
+  req.session.roomCode = code;
+  res.redirect("/play")
 }
 
 function sendGameState(game) { //Sends the current game state, whenever an update happens such as someone placing a line

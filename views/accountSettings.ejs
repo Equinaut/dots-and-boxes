@@ -18,15 +18,22 @@
       <p id="errorMessage"><%= error.message %></p>
     <% } %>
 
-    <form action="/login" method="POST" id="loginForm" class="wide">
-        <input type="text" placeholder="Username" name="username" required/>
-        <input type="password" placeholder="Password" name="password" id="passwordinput" required/>
-        <input type="submit" value="Login" />
+    <h2>Account settings </h2>
+    <h3> Change password </h3>
+
+    <form id="changePasswordForm" action="accountSettings/changePassword" method="POST">
+      <input type="password" name="oldPassword" placeholder="Current Password"/>
+      <input type="password" name="newPassword" placeholder="New password"/>
+      <input type="password" name="confirmNewPassword" placeholder="Confirm new password"/>
+      <input type="submit" value="Change password" />
     </form>
-    <a href="/" class="button">Home </a>
-    <p>If you don't have an account then click below to register</p>
-    <a href="/register" class="button">Register </a>
   </div>
 
+
+  <script>
+    document.getElementById("changePasswordForm").onsubmit = function (e) {
+
+    };
+  </script>
 </body>
 </html>

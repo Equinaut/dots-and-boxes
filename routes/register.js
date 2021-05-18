@@ -6,10 +6,13 @@ const User = require('../models/User')
 
 mongoose.connect(process.env.MONGO_DB_URL, {
   useNewUrlParser: true, useUnifiedTopology: true
-})
+});
 
 router.get('/', (req, res) => {
-  if (req.session.loggedIn == true) return res.redirect("/profile");
+  if (req.session.loggedIn == true) {
+    res.redirect("/profile");
+    return;
+  }
   res.render('register', {error: req.session.error})
 });
 
@@ -25,7 +28,7 @@ router.post('/', async (req, res) => {
   };
 
   let findUser = await User.findOne({username: username.toLowerCase()});
-  
+
   if (findUser != null) {
     req.session.error = {message: "User already exists"};
     res.redirect("/register");

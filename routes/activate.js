@@ -8,7 +8,10 @@ mongoose.connect(process.env.MONGO_DB_URL, {
 })
 
 router.get('/', async (req, res) => {
-  if (!(req.session.loggedIn == true && req.session.user.role==3)) return res.redirect("/profile");
+  if (!(req.session.loggedIn == true && req.session.user.role==3)) {
+    res.redirect("/profile");
+    return;
+  }
   else {
     let notActivatedUsers = await User.find({role: 0}).sort({ createdAt: 'desc' });
     let users = [];
@@ -34,13 +37,19 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/:username', async (req, res) => {
-  if (!(req.session.loggedIn == true && req.session.user.role==3)) return res.redirect("/profile");
+  if (!(req.session.loggedIn == true && req.session.user.role==3)) {
+    res.redirect("/profile");
+    return;
+  }
   else {
     let user = await User.findOne({username: req.params.username});
-    if (user==null) return res.redirect("/activate");
-    if (user.role!=0) return res.redirect("/activate");
+    if (user==null || user.role!=0) {
+      res.redirect("/activate");
+      return;
+    }
     await User.updateOne({username: req.params.username}, {role: 1});
-    return res.redirect("/activate");
+    res.redirect("/activate");
+    return
   }
 });
 
