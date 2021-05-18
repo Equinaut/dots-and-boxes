@@ -42,7 +42,8 @@ router.post('/', async (req, res) => {
       username: user.username,
       displayName: user.displayName,
       role: user.role,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      _id: user._id
   };
 
   req.session.user = userObject;
