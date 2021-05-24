@@ -89,12 +89,27 @@ router.post('/:username/setRole', async (req, res) => { //Backend of form on pro
     res.redirect("/profile/"+req.params.username);
     return;
   }
-  let user = await User.findOne({username: req.params.username.toLowerCase()});
-  if (user==null) {
+  let user = await User.findOne({username: req.params.username.toLowerCase()}, {username: 1, role: 1});
+  if (user==null || user.role==3) {
     res.redirect("/profile/"+req.params.username);
     return;
   }
   await User.updateOne({username: req.params.username.toLowerCase()}, {role: req.body.role || 0});
+  res.redirect("/profile/"+req.params.username);
+  return
+});
+
+router.post('/:username/clearStats', async (req, res) => { //Backend of form on profile page, that allows admins to clear peoples stats
+  if (!(req.session.loggedIn == true && req.session.user.role==3)) {
+    res.redirect("/profile/"+req.params.username);
+    return;
+  }
+  let user = await User.findOne({username: req.params.username.toLowerCase()}, {username: 1});
+  if (user==null) {
+    res.redirect("/profile/"+req.params.username);
+    return;
+  }
+  await User.updateOne({username: req.params.username.toLowerCase()}, {stats: {}});
   res.redirect("/profile/"+req.params.username);
   return
 });

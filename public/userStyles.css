@@ -2,3 +2,7 @@ span[role="0"] {color: gray; font-style: italic;}
 span[role="1"] {color: blue}
 span[role="2"] {color: #bc6bff; font-weight: bold;}
 span[role="3"] {color: red; font-weight: bold;}
+
+@media (prefers-color-scheme: dark) {
+  span[role="1"] {color: #5c76f6} /* Registered users now appear in a slightly lighter blue when dark mode is on */
+}

@@ -42,6 +42,23 @@
             <form id="changeRoleForm" method="POST" action="<%= user.username %>/setRole">
               <input type="submit" value="Change role"/>
             </form>
+            <button class="button" id="clearStatsButton" onclick="clearStatsButton()">Clear stats </button>
+            <button class="button secondry" id="cancelClearStatsButton" onclick="cancelClearStatsButton()" hidden>Cancel </button>
+            <form id="clearStatsForm" method="POST" action="<%= user.username %>/clearStats">
+              <input type="submit" class="button secondry" id="clearStatsConfirmButton" value="Are you sure you want to clear <%= user.username %>'s stats?"/ hidden>
+            </form>
+            <script>
+              function clearStatsButton() {
+                document.getElementById("clearStatsButton").hidden = true;
+                document.getElementById("cancelClearStatsButton").hidden = false;
+                document.getElementById("clearStatsConfirmButton").hidden = false;
+              }
+              function cancelClearStatsButton() {
+                document.getElementById("clearStatsButton").hidden = false;
+                document.getElementById("cancelClearStatsButton").hidden = true;
+                document.getElementById("clearStatsConfirmButton").hidden = true;
+              }
+            </script>
           <% } %>
 
           <br>

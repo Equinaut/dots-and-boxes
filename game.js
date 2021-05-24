@@ -49,7 +49,7 @@ class Game {
     return finished;
   }
 
-  async calculateStats() {
+  async calculateStats() { //Calculates stat changes and adds to database
     let topScore = 0;
     let amountOfTopScore = 0;
     for (let player of this.players) {
@@ -75,11 +75,20 @@ class Game {
       console.log(player);
       console.log(stats);
       if (player.score == topScore && amountOfTopScore == 1) {
-        await User.findByIdAndUpdate(player.id, {"stats.wins": (stats.stats.wins+1) || 1});
+        await User.findByIdAndUpdate(player.id, {
+          "stats.wins": (stats.stats.wins+1) || 1,
+          "stats.boxes": (stats.stats.boxes+player.score) || (player.score) || 0
+        });
       } else if (player.score == topScore) {
-        await User.findByIdAndUpdate(player.id, {"stats.draws": (stats.stats.draws+1) || 1});
+        await User.findByIdAndUpdate(player.id, {
+          "stats.draws": (stats.stats.draws+1) || 1,
+          "stats.boxes": (stats.stats.boxes+player.score) || (player.score) || 0
+      });
       } else {
-        await User.findByIdAndUpdate(player.id, {"stats.losses": (stats.stats.losses+1) || 1});
+        await User.findByIdAndUpdate(player.id, {
+          "stats.losses": (stats.stats.losses+1) || 1,
+          "stats.boxes": (stats.stats.boxes+player.score) || (player.score) || 0
+      });
       }
     }
   }

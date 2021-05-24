@@ -5,8 +5,13 @@
     --background-colour: white;
     --text-colour: black;
     --button-text-colour: black;
+
     --button-colour: #e7e7e7;
     --button-hover-colour: #f0f0f0;
+
+    --button-secondry-colour: #ffbe46;
+    --button-secondry-hover-colour: #ffe400;
+
     --input-focus: yellow;
     --submit-focus: lime;
     --current-turn-background: #92ff45;
@@ -16,13 +21,19 @@
     --dot-colour: black;
   }
 }
+
 @media (prefers-color-scheme: dark) { /*Dark theme*/
   html {
     --background-colour: #121212;
     --text-colour: white;
     --button-text-colour: white;
+
     --button-colour: #4700ba;
     --button-hover-colour: #2d0077;
+
+    --button-secondry-colour: #ea0000;
+    --button-secondry-hover-colour: #9e0000;
+
     --input-focus: yellow;
     --submit-focus: #37d0cf;
     --current-turn-background: #008800;
@@ -102,7 +113,12 @@ input[type=submit]:focus:not(.noFocusColour),.button:focus {
 .button:hover, button:hover, input[type="submit"]:hover {
   background: var(--button-hover-colour);
 }
-
+.secondry {
+  background: var(--button-secondry-colour) !important;
+}
+.secondry:hover {
+  background: var(--button-secondry-hover-colour) !important;
+}
 .container {
   padding: 3em;
 }

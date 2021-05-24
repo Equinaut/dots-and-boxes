@@ -16,21 +16,26 @@ const userSchema = new mongoose.Schema({
   role: {
     type: Number,
     default: 0,
+    enum: [
+      0, //Unactivated account
+      1, //Default user
+      2, //Moderator
+      3, //Admin
+    ],
     required: true
   },
   createdAt: {
-    type: Number,
+    type: Date,
     default: Date.now,
     required: true
   },
   lastOnline: {
-    type: Number,
+    type: Date,
     default: Date.now,
     required: true
   },
   stats: {
-    type: Object,
-    required: false
+    type: Object
   }
 }, {
   collection: "Users"
