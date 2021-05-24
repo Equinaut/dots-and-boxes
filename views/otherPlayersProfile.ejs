@@ -17,6 +17,7 @@
       <% if (locals.user) { %>
         <h2> <span role=<%= user.role %>> <%= user.username %>'s</span> profile </h2>
         <p> <span role=<%= user.role %>> <%= user.username %></span> has been a member since <b><%= user.createdAt %></b></p>
+        <p> <span role=<%= user.role %>> <%= user.username %></span> was last online on <b><%= user.lastOnline %></b></p>
 
         <br>
 
@@ -30,10 +31,35 @@
             <p> <%= stats.gamesPlayed  || 0 %> games played </p>
             <p> <%= stats.boxes || 0 %> boxes formed </p>
           </div>
+
+          <% if (locals.role && role==3) { %>
+            <h3>Admin section</h3>
+            <select id="setRoleInput" name="role" form="changeRoleForm">
+              <option value="0">Deactivate account</option>
+              <option value="1">Normal user</option>
+              <option value="2">Moderator</option>
+            </select>
+            <form id="changeRoleForm" method="POST" action="<%= user.username %>/setRole">
+              <input type="submit" value="Change role"/>
+            </form>
+          <% } %>
+
+          <br>
         <% } %>
+        <a class="button" href="/findUser">Find another user </a>
       <% } else { %>
-        <h2>Profile not found </h2>
-        <a class="button" href="/"> Home </a>
+          <h3>Find another user</h3>
+          <form id="findUserForm" action="/profile/" method="GET">
+            <input id="usernameInput" type="text" name="username" placeholder="Username"/>
+            <input type="submit" value="Find User" />
+          </form>
+          <a class="button" href="/profile"> Back </a>
+          <script>
+            document.getElementById("findUserForm").addEventListener("submit", (e) => { //Go to users profile
+              window.location.href="/profile/"+document.getElementById("usernameInput").value;
+              e.preventDefault();
+            });
+          </script>
       <% } %>
   </div>
 </body>

@@ -93,6 +93,10 @@ app.get("/play", (req, res) => {
   });
 })
 
+app.get("/findUser", (req, res) => {
+  res.render("otherPlayersProfile");
+});
+
 app.post('/', (req, res) => {
   let code = req.body.code;
   if (code == null || req.session.roomCode=="") {

@@ -92,7 +92,7 @@ body, .section  {
 .topBar {
   padding: 8px;
   padding-right: 20px;
-  background: orange;
+  background: var(--other-players-turn);
   display: flex;
 
 }
@@ -110,10 +110,10 @@ body, .section  {
 }
 
 .currentTurn {
-  background: #92ff45;
+  background: var(--current-turn-background);
 }
 .waitingForNewGame {
-  background: yellow;
+  background: var(--waiting-for-new-game);;
 }
 
 .thisPlayer {

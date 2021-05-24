@@ -3,10 +3,6 @@ const router = express.Router();
 const mongoose = require('mongoose')
 const User = require('../models/User')
 
-mongoose.connect(process.env.MONGO_DB_URL, {
-  useNewUrlParser: true, useUnifiedTopology: true
-})
-
 router.get('/', async (req, res) => {
   if (!(req.session.loggedIn == true && req.session.user.role==3)) {
     res.redirect("/profile");

@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema({
     default: Date.now,
     required: true
   },
+  lastOnline: {
+    type: Number,
+    default: Date.now,
+    required: true
+  },
   stats: {
     type: Object,
     required: false

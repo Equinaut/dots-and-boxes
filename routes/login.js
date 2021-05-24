@@ -46,6 +46,8 @@ router.post('/', async (req, res) => {
       _id: user._id
   };
 
+  await User.findByIdAndUpdate(userObject._id, {lastOnline: Date.now() || 0}); //Update lastOnline field
+
   req.session.user = userObject;
   req.session.loggedIn = true;
   res.redirect('/profile');

@@ -64,8 +64,8 @@ function drawGrid() {
   let canvasContext = boardCanvas.getContext("2d"); //Draw dots of board
   for (let x = 0; x < GRID_WIDTH; x++) {
     for (let y = 0; y < GRID_HEIGHT; y++) {
-      canvasContext.fillStyle = "black";
-      if (selected && selectedPosition.toString() == [x, y].toString()) canvasContext.fillStyle = "#00e30b";
+      canvasContext.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--dot-colour');
+      if (selected && selectedPosition.toString() == [x, y].toString()) canvasContext.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--selected-dot-colour');
       canvasContext.beginPath();
       canvasContext.ellipse((x + 0.5) * SQUARE_SIZE, (y + 0.5) * SQUARE_SIZE, 8, 8, 0, 0, 2 * Math.PI);
       canvasContext.fill(); //Draws dots for each dot on grid

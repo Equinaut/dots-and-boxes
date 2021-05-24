@@ -1,14 +1,46 @@
-* {
-  --button-colour: #e7e7e7;
-  --button-hover-colour: #f0f0f0;
-  --input-focus: yellow;
-  --submit-focus: lime;
+/* Define colour schemes */
+
+@media (prefers-color-scheme: light) { /* Light theme */
+  html {
+    --background-colour: white;
+    --text-colour: black;
+    --button-text-colour: black;
+    --button-colour: #e7e7e7;
+    --button-hover-colour: #f0f0f0;
+    --input-focus: yellow;
+    --submit-focus: lime;
+    --current-turn-background: #92ff45;
+    --other-players-turn: orange;
+    --waiting-for-new-game: yellow;
+    --selected-dot-colour: #00e30b;
+    --dot-colour: black;
+  }
+}
+@media (prefers-color-scheme: dark) { /*Dark theme*/
+  html {
+    --background-colour: #121212;
+    --text-colour: white;
+    --button-text-colour: white;
+    --button-colour: #4700ba;
+    --button-hover-colour: #2d0077;
+    --input-focus: yellow;
+    --submit-focus: #37d0cf;
+    --current-turn-background: #008800;
+    --other-players-turn: #a56b00;
+    --waiting-for-new-game: #018b78;
+    --selected-dot-colour: #00dede;
+    --dot-colour: white;
+  }
 }
 
+/* Main styles */
 body  {
   height: 100%;
   margin: 0;
+  background: var(--background-colour);
+  color: var(--text-colour);
 }
+
 * {
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
@@ -41,7 +73,7 @@ form {
   flex-direction: column;
 }
 
-input, .button {
+input, select, .button {
   text-align: center;
   padding: 1em;
   margin: 8px 0;
@@ -51,7 +83,7 @@ input, .button {
   border-radius: 100vh;
 }
 
-input:focus {
+input:focus, select:focus {
   outline: none;
   background: var(--input-focus);
 }
@@ -63,9 +95,9 @@ input[type=submit]:focus:not(.noFocusColour),.button:focus {
 
 .button, button, input[type=submit] {
   text-decoration: none;
-  color: black;
+  color: var(--button-text-colour);
   background: var(--button-colour);
-  border: solid black 1px;
+  border: solid var(--button-text-colour) 1px;
 }
 .button:hover, button:hover, input[type="submit"]:hover {
   background: var(--button-hover-colour);
