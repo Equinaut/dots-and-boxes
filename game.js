@@ -1,3 +1,6 @@
+const mongoose = require('mongoose');
+const User = require('./models/User');
+
 class Game {
   constructor(room) {
     this.width = 5;
@@ -40,9 +43,45 @@ class Game {
       }
 
       if (oneWinner && (winner!=null)) this.players[winner].wins++;
+      this.calculateStats(); //Add the stats to the database
       this.winCounted = true;
     }
     return finished;
+  }
+
+  async calculateStats() {
+    let topScore = 0;
+    let amountOfTopScore = 0;
+    for (let player of this.players) {
+      if (player.score > topScore) {
+        topScore = player.score;
+        amountOfTopScore = 1;
+      } else if (player.score == topScore) {
+        amountOfTopScore += 1;
+      }
+    }
+
+    for (let player of this.players) {
+      let stats = await User.findById(player.id, {stats: 1});
+      if (stats.stats == undefined) {
+        stats = {
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          boxes: 0
+        };
+        await User.findByIdAndUpdate(player.id, {stats: {}});
+      }
+      console.log(player);
+      console.log(stats);
+      if (player.score == topScore && amountOfTopScore == 1) {
+        await User.findByIdAndUpdate(player.id, {"stats.wins": (stats.stats.wins+1) || 1});
+      } else if (player.score == topScore) {
+        await User.findByIdAndUpdate(player.id, {"stats.draws": (stats.stats.draws+1) || 1});
+      } else {
+        await User.findByIdAndUpdate(player.id, {"stats.losses": (stats.stats.losses+1) || 1});
+      }
+    }
   }
 
   createLine(startPosition, endPosition, playerNumber) { //Creates a new line with the given coordinates
