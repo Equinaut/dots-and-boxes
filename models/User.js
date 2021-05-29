@@ -36,7 +36,29 @@ const userSchema = new mongoose.Schema({
   },
   stats: {
     type: Object
-  }
+  },
+  friends: [
+    {
+      id: mongoose.Schema.Types.ObjectId,
+      friendedOn: {
+        type: Date,
+        default: Date.now,
+        required: true
+      },
+      friendsSince: {
+        type: Date,
+        required: false
+      },
+      status: {
+        type: Number,
+        enum: [
+          0, //Requested
+          1, //Pending acceptance
+          2, //Frinds
+        ]
+      }
+    }
+  ]
 }, {
   collection: "Users"
 })

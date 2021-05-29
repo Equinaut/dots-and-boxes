@@ -13,7 +13,7 @@
     <h1>Dots and Boxes</h1>
   </div>
 
-  <div class="container">
+  <div class="container wideArea">
     <p>Welcome back <span role=<%= role %>><%= username %></span></p>
     <% if (locals.createdAt) { %><p>You have been a member since <b><%= createdAt %></b></p> <% } %>
     <a href="/" class="button"> Play </a>
@@ -26,6 +26,7 @@
       <h3>Admin section</h3>
       <a href="/activate" class="button"> Activate accounts </a>
     <% } %>
+
     <% if (locals.stats) { %>
       <h3>Your stats</h3>
       <div class="stats">
@@ -37,6 +38,52 @@
         <p> <%= stats.boxes || 0 %> boxes formed </p>
       </div>
     <% } %>
+
+    <h3>Your friends</h3>
+    <% if (locals.friends && friends.length && friends.length > 0) { %>
+      <div class="friendList">
+        <% for (let friend of friends) { %>
+          <div class="friendItem listItem">
+            <a href="/profile/<%= friend.username %>"><span role=<%= friend.role %>><%= friend.displayName %></span></a>
+            <div>
+              <form method="POST" action="/profile/<%= friend.username %>/deleteFriend"> <input type="submit" class="negative" value="Remove friend"/> </form>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    <% } else { %>
+      <p>You currently have no friends, to add a friend goto <a href="/findUser">find a user</a> and click add friend.</p>
+    <% } %>
+
+    <% if (locals.pending && pending.length && pending.length > 0) { %>
+      <h3>Friend requests</h3>
+      <div class="friendList">
+        <% for (let friend of pending) { %>
+          <div class="friendItem listItem">
+            <a href="/profile/<%= friend.username %>"><span role=<%= friend.role %>><%= friend.displayName %></span></a>
+            <div>
+              <form method="POST" action="/profile/<%= friend.username %>/acceptFriend"> <input type="submit" class="positive" value="Accept"/> </form>
+              <form method="POST" action="/profile/<%= friend.username %>/deleteFriend"> <input type="submit" class="negative" value="Delete"/> </form>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+
+
+      <% if (locals.requested && requested.length && requested.length > 0) { %>
+        <h3>Outgoing friend requests</h3>
+        <div class="friendList">
+          <% for (let friend of requested) { %>
+            <div class="friendItem listItem">
+              <a href="/profile/<%= friend.username %>"><span role=<%= friend.role %>><%= friend.displayName %></span></a>
+              <div>
+                <form method="POST" action="/profile/<%= friend.username %>/deleteFriend"> <input type="submit" class="negative" value="Delete"/> </form>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      <% } %>
   </div>
 </body>
 </html>

@@ -21,6 +21,43 @@
 
         <br>
 
+        <div class="friendSection">
+          <% if (locals.user && user.friendStatus==0) { %> <!-- Incoming friend request -->
+            <div class="equalColumns">
+              <form id="acceptFriendForm" method="POST" action="<%= user.username %>/acceptFriend">
+                <input type="hidden" name="pageViewedOn" value="otherProfile">
+                <input type="submit" class="positive" value="Accept friend request"/>
+              </form>
+              <form id="deleteFriendForm" method="POST" action="<%= user.username %>/deleteFriend">
+                <input type="hidden" name="pageViewedOn" value="otherProfile">
+                <input type="submit" class="negative" value="Decline friend request"/>
+              </form>
+            </div>
+
+          <% } else if (locals.user && user.friendStatus==1) { %> <!-- Requested to be friends -->
+            <form id="removeFriendForm" method="POST" action="<%= user.username %>/deleteFriend">
+              <input type="hidden" name="pageViewedOn" value="otherProfile">
+              <input type="submit" class="negative" value="Cancel friend request"/>
+            </form>
+
+          <% } else if (locals.user && user.friendStatus==2) { %> <!-- Friends -->
+            <p>You have been friends with <span role=<%= user.role %>> <%= user.username %></span> since <b><%= user.friendsSince %></b></p>
+            <form id="removeFriendForm" method="POST" action="<%= user.username %>/deleteFriend">
+              <input type="hidden" name="pageViewedOn" value="otherProfile">
+              <input type="submit" class="negative" value="Click here to remove friend"/>
+            </form>
+
+          <% } else if (locals.user && user.friendStatus==-1){ %>
+            <form id="addFriendForm" method="POST" action="<%= user.username %>/friend">
+              <input type="submit" value="Add friend"/>
+            </form>
+
+          <% } %>
+
+        </div>
+
+        <br>
+
         <% if (locals.stats) { %>
           <h3><span role=<%= user.role %>> <%= user.username %>'s</span> stats </h3>
           <div class="stats">
@@ -31,36 +68,37 @@
             <p> <%= stats.gamesPlayed  || 0 %> games played </p>
             <p> <%= stats.boxes || 0 %> boxes formed </p>
           </div>
+        <% } %>
 
-          <% if (locals.role && role==3) { %>
-            <h3>Admin section</h3>
-            <select id="setRoleInput" name="role" form="changeRoleForm">
-              <option value="0">Deactivate account</option>
-              <option value="1">Normal user</option>
-              <option value="2">Moderator</option>
-            </select>
-            <form id="changeRoleForm" method="POST" action="<%= user.username %>/setRole">
-              <input type="submit" value="Change role"/>
-            </form>
-            <button class="button" id="clearStatsButton" onclick="clearStatsButton()">Clear stats </button>
-            <button class="button secondry" id="cancelClearStatsButton" onclick="cancelClearStatsButton()" hidden>Cancel </button>
-            <form id="clearStatsForm" method="POST" action="<%= user.username %>/clearStats">
-              <input type="submit" class="button secondry" id="clearStatsConfirmButton" value="Are you sure you want to clear <%= user.username %>'s stats?"/ hidden>
-            </form>
-            <script>
-              function clearStatsButton() {
-                document.getElementById("clearStatsButton").hidden = true;
-                document.getElementById("cancelClearStatsButton").hidden = false;
-                document.getElementById("clearStatsConfirmButton").hidden = false;
-              }
-              function cancelClearStatsButton() {
-                document.getElementById("clearStatsButton").hidden = false;
-                document.getElementById("cancelClearStatsButton").hidden = true;
-                document.getElementById("clearStatsConfirmButton").hidden = true;
-              }
-            </script>
-          <% } %>
+        <% if (locals.role && role==3) { %>
+          <h3>Admin section</h3>
+          <select id="setRoleInput" name="role" form="changeRoleForm">
+            <option value="0">Deactivate account</option>
+            <option value="1">Normal user</option>
+            <option value="2">Moderator</option>
+          </select>
 
+          <form id="changeRoleForm" method="POST" action="<%= user.username %>/setRole">
+            <input type="submit" value="Change role"/>
+          </form>
+
+          <button class="button" id="clearStatsButton" onclick="clearStatsButton()">Clear stats </button>
+          <button class="button secondry" id="cancelClearStatsButton" onclick="cancelClearStatsButton()" hidden>Cancel </button>
+          <form id="clearStatsForm" method="POST" action="<%= user.username %>/clearStats">
+            <input type="submit" class="button secondry" id="clearStatsConfirmButton" value="Are you sure you want to clear <%= user.username %>'s stats?"/ hidden>
+          </form>
+          <script>
+            function clearStatsButton() {
+              document.getElementById("clearStatsButton").hidden = true;
+              document.getElementById("cancelClearStatsButton").hidden = false;
+              document.getElementById("clearStatsConfirmButton").hidden = false;
+            }
+            function cancelClearStatsButton() {
+              document.getElementById("clearStatsButton").hidden = false;
+              document.getElementById("cancelClearStatsButton").hidden = true;
+              document.getElementById("clearStatsConfirmButton").hidden = true;
+            }
+          </script>
           <br>
         <% } %>
         <a class="button" href="/findUser">Find another user </a>

@@ -12,6 +12,14 @@
     --button-secondry-colour: #ffbe46;
     --button-secondry-hover-colour: #ffe400;
 
+    --button-positive-colour: #86fa86;
+    --button-positive-hover-colour: #5cee5c;
+    --button-negative-colour: #ffa6a6;
+    --button-negative-hover-colour: #ee8787;
+
+    --link-unvisited: #0000EE;
+    --link-visited: #551A8B;
+
     --input-focus: yellow;
     --submit-focus: lime;
     --current-turn-background: #92ff45;
@@ -33,6 +41,14 @@
 
     --button-secondry-colour: #ea0000;
     --button-secondry-hover-colour: #9e0000;
+
+    --button-positive-colour: green;
+    --button-positive-hover-colour: darkGreen;
+    --button-negative-colour: red;
+    --button-negative-hover-colour: darkRed;
+
+    --link-unvisited: orange;
+    --link-visited: #c06400;
 
     --input-focus: yellow;
     --submit-focus: #37d0cf;
@@ -70,15 +86,19 @@ body  {
   margin: auto;
   width: 100%;
   max-width: 500px;
+  padding: 3em;
 }
 .wideArea {max-width: 750px;}
+
 #errorMessage {
   text-align: center;
   margin-bottom: 0;
 }
-.wide {
-  flex-basis: 100%;
-}
+.wide {flex-basis: 100%;}
+
+a:not(.button) {color: var(--link-unvisited);}
+a:not(.button):visited {color: var(--link-visited);}
+
 form {
   display: flex;
   flex-direction: column;
@@ -113,15 +133,12 @@ input[type=submit]:focus:not(.noFocusColour),.button:focus {
 .button:hover, button:hover, input[type="submit"]:hover {
   background: var(--button-hover-colour);
 }
-.secondry {
-  background: var(--button-secondry-colour) !important;
-}
-.secondry:hover {
-  background: var(--button-secondry-hover-colour) !important;
-}
-.container {
-  padding: 3em;
-}
+.secondry {background: var(--button-secondry-colour) !important;}
+.secondry:hover {background: var(--button-secondry-hover-colour) !important;}
+.positive {background: var(--button-positive-colour) !important;}
+.positive:hover {background: var(--button-positive-hover-colour) !important;}
+.negative {background: var(--button-negative-colour) !important;}
+.negative:hover {background: var(--button-negative-hover-colour) !important;}
 
 .listItem {
   padding: 1em 1.5em;
@@ -134,5 +151,30 @@ input[type=submit]:focus:not(.noFocusColour),.button:focus {
 }
 .listItem * {
   display: inline-block;
-  margin-bottom: 0;
+  margin: auto 0;
+}
+
+.friendItem {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section {
+  padding: 1em 0;
+}
+
+.equalColumns {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.equalColumns > * {
+  flex-basis: 100%;
+  padding: 0 0.5em;
+}
+@media only screen and (max-width: 600px) {
+  .friendItem {
+    flex-direction: column;
+  }
 }
