@@ -12,6 +12,7 @@ class Game {
     this.currentTurn = 0;
     this.winCounted = false;
     this.firstPlayerTurn = this.currentTurn;
+    this.nextPlayerNumber = 1; //First player number
   }
 
   restart() {

@@ -178,15 +178,9 @@ if (document.getElementById("usernameInput")) {
     if (e.keyCode==13) changeUsername();
   });
 }
-function leave() {
-  socket.emit("leave");
-}
-function startGameButton() {
-  socket.emit("gameStart");
-}
-function restartGame() {
-  socket.emit("restart");
-}
+function leave() { location.href='/'; }
+function startGameButton() {socket.emit("gameStart");}
+function restartGame() {socket.emit("restart");}
 function changeUsername() {
   if (document.getElementById("usernameInput")==null) return;
   let name = document.getElementById("usernameInput").value;
@@ -195,18 +189,17 @@ function changeUsername() {
   socket.emit("setName", name);
 }
 
-socket.on("gameEnd", () => {
-  console.log("Gameover");
-  location.href='/';
-});
-socket.on("disconnect", () => {
-  console.log("Gameover");
-  location.href='/';
-});
+socket.on("gameEnd", leave);
+socket.on("disconnect", leave);
 
+socket.on("becomeAdmin", () => {
+  for (let element of document.getElementsByClassName("adminSetting")) element.hidden = false
+});
+socket.on("newPlayerNum", (num) => {
+  playerNumber = num
+});
 
 socket.on("gameStart", (msg) => {
-  console.log("Starting game", msg);
   lines = [];
   squares = [];
   GRID_WIDTH = msg.width || DEFAULT_WIDTH;

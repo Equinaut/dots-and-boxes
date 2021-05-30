@@ -45,15 +45,15 @@
 
 
 
-           <% if (admin) { %><button class="setting adminSetting button" onclick="startGameButton()">Start game</button><% } %>
+           <button class="setting adminSetting button" onclick="startGameButton()" <% if (!admin) { %>hidden<% } %> >Start game</button>
            <div class="setting size">
              <div class="sliderContainer">
                <p>Width: <span id="widthDisplay"> 5 </span></p>
-               <% if (admin) { %><input class="slider adminSetting" type="range" id="widthInput" min=2 max=15 value=5 /><% } %>
+               <input class="slider adminSetting" type="range" id="widthInput" min=2 max=15 value=5 <% if (!admin) { %>hidden<% } %>/>
              </div>
              <div class="sliderContainer">
                <p>Height: <span id="heightDisplay"> 5 </span> </p>
-               <% if (admin) { %><input class="slider adminSetting" type="range" id="heightInput" min=2 max=15 value=5 /><% } %>
+               <input class="slider adminSetting" type="range" id="heightInput" min=2 max=15 value=5 <% if (!admin) { %>hidden<% } %>/>
              </div>
            </div>
 
@@ -77,7 +77,7 @@
            <div class="playerList"> </div>
            <div class="inGameControls">
              <a href="/" class="button">Leave game</a>
-             <% if (admin) { %><button id="gameEndControls" class="button" onclick="restartGame()">Restart Game</button><% } %>
+             <button id="gameEndControls" class="button" onclick="restartGame()" <% if (!admin) { %>hidden<% } %>>Restart Game</button>
            </div>
          </div>
        </div>

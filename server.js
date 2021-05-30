@@ -64,29 +64,30 @@ function joinOrCreateGame(req, res, next) {
   }
   let game = games[code];
 
+  req.session.playerId = req.sessionID;
+  if (req.session.loggedIn) req.session.playerId = req.session.user._id;
+
+  for (let player of game.players) {
+    if (player.id==req.session.playerId) { //Joining when already in the game (On other clients)
+      req.session.roomCode = code;
+      player.connectedClients++; //Add one to connected clients count
+      next(); //Continue to join game;
+      return;
+    }
+  }
+
   if (game.started) {
     req.session.error = {message: "Game has already started"}
     return res.redirect("/");
   }
 
-  req.session.playerId = req.sessionID;
-  if (req.session.loggedIn) req.session.playerId = req.session.user._id;
-
-  for (let player of game.players) {
-    if (player.id==req.session.playerId) {
-      req.session.error = {message: "You are already in this game."};
-      return res.redirect("/");
-    }
-  }
-
-  let playerNum = 0;
-  if (game.players.length > 0) playerNum = game.players[game.players.length-1].number+1;
+  let playerNum = game.players.length;
 
   let role = -1;
   let name = null;
   if (req.session.loggedIn==true) {
     if (req.session.user.role==0 || req.session.user.role==null) {
-      req.session.error = {message: "Your account is not activated, please wait while your account is activated before you can play games."};
+      req.session.error = {message: "Your account is not activated, please wait while an admin activates your account."};
       return res.redirect("/");
     }
     role = req.session.user.role;
@@ -97,7 +98,7 @@ function joinOrCreateGame(req, res, next) {
   if (game.players.length==0) admin = true;
   if (req.session.loggedIn && (req.session.user.role == 2 || req.session.user.role == 3)) admin = true; //Give admins and moderators admin access in any room they join
 
-  let newPlayer = new Player(req.session.playerId, playerNum, admin, role, name);
+  let newPlayer = new Player(req.session.playerId, playerNum, game.nextPlayerNumber++, admin, role, name);
 
   //New player created
   game.players.push(newPlayer); //Add new player object to room
@@ -166,20 +167,31 @@ function sendGameState(game) { //Sends the current game state, whenever an updat
 io.on("connection", (socket) => {
   if (socket.handshake.session) {
     let roomCode = socket.handshake.session.roomCode;
-    if (!(roomCode==null || roomCode=="")) {
-      socket.join("Room:"+roomCode);
-    }
+    if (socket.handshake.session.playerId) socket.join("Room:"+roomCode+"Player:"+socket.handshake.session.playerId);
+
+    if (!(roomCode==null || roomCode=="")) { socket.join("Room:"+roomCode); }
     let game = games[roomCode];
-    if (game!=null) io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
+    if (game==null) return;
+    io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
+
+    if (game.started) {
+      io.to("Room:"+roomCode+"Player:"+socket.handshake.session.playerId).emit("gameStart", {
+        width: game.width,
+        height: game.height
+      });
+      sendGameState(game);
+    }
   }
 
   socket.on("setName", (name) => { //When user wants to change their name
     if (! ( name.length >= 2 && name.length <= 25) ) return;
 
     if (socket.handshake.session.loggedIn) {
-      if (socket.handshake.session.user.role != -1) return;
+      if (socket.handshake.session.user.role != -1) return; //Don't allow name changes to users who are logged in
     }
+
     let code = socket.handshake.session.roomCode;
+
     if (code=="" || code==null) return;
     if (!(code in games)) return;
     let game = games[code];
@@ -278,23 +290,55 @@ io.on("connection", (socket) => {
   });
 
 
-  socket.on("leave", () => { //If leave event is sent
-    let gameCode = socket.handshake.session.roomCode;
-    if (gameCode==null) return;
-    io.to("Room:"+gameCode).emit("gameEnd");
-    if (!(gameCode in games)) return;
-    delete games[gameCode];
-    io.of("/").adapter.rooms.delete("Room:"+gameCode);
-  });
+  function leave() { //Function to handle user leaving game or disconnecting
 
-  socket.on("disconnecting", () => { //When socket disconnects
     let gameCode = socket.handshake.session.roomCode;
-    if (gameCode==null) return;
-    io.to("Room:"+gameCode).emit("gameEnd");
-    if (!(gameCode in games)) return;
-    delete games[gameCode];
-    io.of("/").adapter.rooms.delete("Room:"+gameCode);
-  });
+
+    let game = games[gameCode];
+    if (game==null) return;
+    let thisPlayer = null;
+    for (let player of game.players) {
+      if (player.id == socket.handshake.session.playerId) thisPlayer = player;
+    }
+
+    if ((game.started || game.players.length == 1) && thisPlayer.connectedClients <= 1) { //If game has started then end it
+
+      io.to("Room:"+gameCode).emit("gameEnd");
+      if (!(gameCode in games)) return;
+      delete games[gameCode];
+      io.of("/").adapter.rooms.delete("Room:"+gameCode);
+
+    } else { //Otherwise just remove player from playerlist as game is still in waiting room
+
+      for (let i=0; i<game.players.length; i++) {
+        player = game.players[i];
+        if (player.id==socket.handshake.session.playerId) {
+            if (player.connectedClients <= 1) {
+            game.players.splice(i,1); //Remove player from list
+            socket.leave("Room:"+gameCode+"Player:"+socket.handshake.session.playerId);
+            socket.leave("Room:"+gameCode);
+            for (let j=0; j<game.players.length; j++) { //Renumber remaining players
+              game.players[j].number = j;
+
+              io.to("Room:"+gameCode+"Player:"+game.players[j].id).emit("newPlayerNum", j);
+              if (j==0) { //Give admin to new player 0
+                game.players[j].admin = true;
+                io.to("Room:"+gameCode+"Player:"+game.players[j].id).emit("becomeAdmin");
+              }
+            }
+
+            io.to("Room:" + game.room).emit("playerList", game.updatePlayerNames()); //Updates playerlist
+            return;
+          } else {
+            player.connectedClients--;
+          }
+        }
+      }
+    }
+  }
+
+  socket.on("disconnecting", leave); //When socket disconnects
+
 });
 
 server.listen(PORT, () => { //Listens on PORT (defaults to 3000)
