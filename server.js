@@ -45,31 +45,69 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
-  let roomCode = req.query.room;
-  if (roomCode!=null) {
-    joinOrCreateGame(roomCode, req, res); //Automatically joins game if a url parameter with roomCode is defined
-    return;
-  }
-
   let error = null;
   if (req.session.error != null) error = req.session.error;
   req.session.error = null;
   res.render("joinScreen", {error: error, loggedIn: req.session.loggedIn});
 });
 
-app.get("/play", (req, res) => {
-  if (req.session.roomCode==null || req.session.roomCode=="") {
-    req.session.error = {message: "Invalid room code"};
-    res.redirect("/");
-    return;
-  }
-  let game = games[req.session.roomCode];
+function joinOrCreateGame(req, res, next) {
+  let code = req.params.roomCode;
 
-  if (game==null || game.started) {
-    if (game!=null && game.started) req.session.error = {message: "Game has already started"}
-    res.redirect("/");
-    return;
+  if (!(/^[a-zA-Z0-9]{1,25}$/.test(code))) {
+    req.session.error = {message: "Invalid room code"};
+    return res.redirect("/");
   }
+
+  if (!(code in games)) {
+    games[code] = new Game(code);
+  }
+  let game = games[code];
+
+  if (game.started) {
+    req.session.error = {message: "Game has already started"}
+    return res.redirect("/");
+  }
+
+  req.session.playerId = req.sessionID;
+  if (req.session.loggedIn) req.session.playerId = req.session.user._id;
+
+  for (let player of game.players) {
+    if (player.id==req.session.playerId) {
+      req.session.error = {message: "You are already in this game."};
+      return res.redirect("/");
+    }
+  }
+
+  let playerNum = 0;
+  if (game.players.length > 0) playerNum = game.players[game.players.length-1].number+1;
+
+  let role = -1;
+  let name = null;
+  if (req.session.loggedIn==true) {
+    if (req.session.user.role==0 || req.session.user.role==null) {
+      req.session.error = {message: "Your account is not activated, please wait while your account is activated before you can play games."};
+      return res.redirect("/");
+    }
+    role = req.session.user.role;
+    name = req.session.user.displayName;
+  }
+
+  let admin = false; //Check if admin access
+  if (game.players.length==0) admin = true;
+  if (req.session.loggedIn && (req.session.user.role == 2 || req.session.user.role == 3)) admin = true; //Give admins and moderators admin access in any room they join
+
+  let newPlayer = new Player(req.session.playerId, playerNum, admin, role, name);
+
+  //New player created
+  game.players.push(newPlayer); //Add new player object to room
+  req.session.roomCode = code;
+
+  next();
+}
+
+app.get("/play/:roomCode", joinOrCreateGame, (req, res) => {
+  let game = games[req.params.roomCode];
 
   let playerNum = 0;
   let admin = false;
@@ -91,20 +129,6 @@ app.get("/play", (req, res) => {
     admin: admin,
     SERVER_ADDRESS: process.env.SERVER_ADDRESS
   });
-})
-
-app.get("/findUser", (req, res) => {
-  res.render("otherPlayersProfile");
-});
-
-app.post('/', (req, res) => {
-  let code = req.body.code;
-  if (code == null || req.session.roomCode=="") {
-    req.session.error = {message: "Invalid room code"};
-    res.redirect("/");
-    return
-  }
-  joinOrCreateGame(code, req, res);
 });
 
 app.post('/logout', (req, res) => {
@@ -118,59 +142,13 @@ app.use('/register', require('./routes/register'));
 app.use('/login', require('./routes/login'));
 app.use('/account', require('./routes/profile'));
 app.use('/profile', require('./routes/profile'));
+app.get("/findUser", (req, res) => {res.render("otherPlayersProfile");});
 app.use('/activate', require('./routes/activate'));
 app.use('/accountSettings', require('./routes/accountSettings'));
 
-app.get('*', (req, res) => {res.redirect("/");});
+app.get('*', (req, res) => {res.redirect("/")});
 
-function joinOrCreateGame(code, req, res) {
-  if (!(code in games)) {
-    games[code] = new Game(code);
-  }
-  let game = games[code];
-  req.session.playerId = req.sessionID;
-  if (req.session.loggedIn) req.session.playerId = req.session.user._id;
 
-  for (let player of game.players) {
-    if (player.id==req.session.playerId) {
-      req.session.error = {message: "You are already in this game."};
-      res.redirect("/");
-      return;
-    }
-  }
-
-  let playerNum = 0;
-  if (game.players.length > 0) playerNum = game.players[game.players.length-1].number+1;
-
-  let role = -1;
-  let name = null;
-  if (req.session.loggedIn==true) {
-    if (req.session.user.role==0 || req.session.user.role==null) {
-      req.session.error = {message: "Your account is not activated, please wait while your account is activated before you can play games."};
-      res.redirect("/");
-      return;
-    }
-    role = req.session.user.role;
-    name = req.session.user.displayName;
-  }
-
-  let admin = false; //Check if admin access
-  if (game.players.length==0) admin = true;
-  if (req.session.loggedIn && (req.session.user.role == 2 || req.session.user.role == 3)) admin = true; //Give admins and moderators admin access in any room they join
-
-  if (game.started) {
-    req.session.error = {message: "Game has already started"}
-    res.redirect("/");
-    return;
-  }
-  let newPlayer = new Player(req.session.playerId, playerNum, admin, role, name);
-
-  //New player created
-  game.players.push(newPlayer); //Add new player object to room
-
-  req.session.roomCode = code;
-  res.redirect("/play")
-}
 
 function sendGameState(game) { //Sends the current game state, whenever an update happens such as someone placing a line
   io.to("Room:"+game.room).emit("gameState",
@@ -317,9 +295,7 @@ io.on("connection", (socket) => {
     delete games[gameCode];
     io.of("/").adapter.rooms.delete("Room:"+gameCode);
   });
-})
-
-
+});
 
 server.listen(PORT, () => { //Listens on PORT (defaults to 3000)
   console.log('listening on *:', PORT);

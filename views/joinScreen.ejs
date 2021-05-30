@@ -18,8 +18,8 @@
       <p id="errorMessage"><%= error.message %></p>
     <% } %>
 
-    <form action="/" method="POST" class="joinForm wide">
-        <input type="text" placeholder="Room code" name="code" />
+    <form action="/" method="GET" class="joinForm wide" id="joinForm">
+        <input type="text" placeholder="Room code" maxLength=25 name="code" id="joinFormRoomCode"/>
         <input type="submit" value="Join Game" />
     </form>
     <% if (loggedIn!=true) { %>
@@ -30,5 +30,11 @@
     <% }%>
   </div>
 
+  <script>
+    document.getElementById("joinForm").addEventListener("submit", (e) => { //Go to users profile
+      window.location.href="/play/"+document.getElementById("joinFormRoomCode").value;
+      e.preventDefault();
+    });
+  </script>
 </body>
 </html>

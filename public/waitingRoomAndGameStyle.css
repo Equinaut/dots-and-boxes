@@ -70,6 +70,7 @@ body, .section  {
 .sliderContainer>input {
   flex-grow: 1;
   margin: 0 1em;
+  padding: 0;
 }
 
 /* Main Game Screen */
@@ -78,8 +79,9 @@ body, .section  {
   padding: 10px;
   display: flex;
   justify-content: space-between;
-  margin: -3px 10px 0 10px;
+  margin: -3px 10px 10px 10px;
   border: solid 3px;
+  border-radius: 1em;
 }
 
 .player>p {
