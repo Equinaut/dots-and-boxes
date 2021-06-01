@@ -6,6 +6,11 @@
   <link rel="stylesheet" href="/style.css">
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css
+
+
+
+">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -48,12 +53,12 @@
            <button class="setting adminSetting button" onclick="startGameButton()" <% if (!admin) { %>hidden<% } %> >Start game</button>
            <div class="setting size">
              <div class="sliderContainer">
-               <p>Width: <span id="widthDisplay"> 5 </span></p>
-               <input class="slider adminSetting" type="range" id="widthInput" min=2 max=15 value=5 <% if (!admin) { %>hidden<% } %>/>
+               <p>Width: <span class="widthDisplay"> 5 </span></p>
+               <input class="slider adminSetting widthInput" type="range" min=2 max=15 value=5 oninput="sizeChange('width', this.value)" <% if (!admin) { %>hidden<% } %>/>
              </div>
              <div class="sliderContainer">
-               <p>Height: <span id="heightDisplay"> 5 </span> </p>
-               <input class="slider adminSetting" type="range" id="heightInput" min=2 max=15 value=5 <% if (!admin) { %>hidden<% } %>/>
+               <p>Height: <span class="heightDisplay"> 5 </span> </p>
+               <input class="slider adminSetting heightInput" type="range" min=2 max=15 value=5 oninput="sizeChange('height', this.value)" <% if (!admin) { %>hidden<% } %>/>
              </div>
            </div>
 
@@ -68,9 +73,15 @@
      <div class="section Game" hidden>
        <div id="gameContainerOuter">
          <div id="gameContainerInner">
+
            <div class="topBar" id="topBar">
              <h4 class="playerTurn" id="playerTurn"></h4>
+             <div class="icons" id="topBarIcons">
+
+               <span onclick="toggleSettings()" class="icon fa fa-2x fa-cog"> </span>
+             </div>
            </div>
+
            <canvas id="board"> </canvas>
          </div>
          <div id="sidebar">
@@ -82,15 +93,37 @@
          </div>
        </div>
      </div>
+     <div class="settingsScreenFilter" id="settingsScreenFilter" hidden> </div>
+     <div class="settingsScreenContainer" id="settingsScreenContainer" hidden>
+       <div class="settingsScreen">
+         <h2 class="settingsTitle">Game settings</h2>
+         <span onclick="toggleSettings()" id="settingsCloseButton" class="icon fa fa-3x fa-times-circle"></span>
+         <h4>All changes to settings will start when the next round begins</h4>
+
+         <div class="setting size">
+           <div class="sliderContainer">
+             <p>Width: <span class="widthDisplay"> 5 </span></p>
+             <input class="slider adminSetting widthInput" type="range" min=2 max=15 value=5 oninput="sizeChange('width', this.value)" <% if (!admin) { %>hidden<% } %>/>
+           </div>
+           <div class="sliderContainer">
+             <p>Height: <span class="heightDisplay"> 5 </span> </p>
+             <input class="slider adminSetting heightInput" type="range" min=2 max=15 value=5 oninput="sizeChange('height', this.value)" <% if (!admin) { %>hidden<% } %>/>
+           </div>
+         </div>
+
+       </div>
+     </div>
+
    </div>
 
 
   <script>
     //Some vars are passed in to code
-    let GRID_WIDTH = <%= width %>; //Width of the grid in dots
-    let GRID_HEIGHT = <%= height %>; //Height of the grid in dots
+    let GRID_WIDTH = <%= width || 5 %>; //Width of the grid in dots
+    let GRID_HEIGHT = <%= height || 5 %>; //Height of the grid in dots
     let SERVER_ADDRESS = "<%= SERVER_ADDRESS %>";
-    let playerNumber = <%= playerNumber %>;
+    let playerNumber = <%= playerNumber || 0 %>;
+    let admin = <%= admin || false %>;
 
   </script>
   <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>

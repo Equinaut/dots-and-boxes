@@ -6,27 +6,36 @@
     --text-colour: black;
     --button-text-colour: black;
 
+    /* Button colours (4 button styles) */
     --button-colour: #e7e7e7;
     --button-hover-colour: #f0f0f0;
+    --button-focus-colour: #5cee5c;
 
-    --button-secondry-colour: #ffbe46;
-    --button-secondry-hover-colour: #ffe400;
+    --button-secondry-colour: #ffe565;
+    --button-secondry-hover-colour: #ffd400;
+    --button-secondry-focus-colour: #ffb679;
 
     --button-positive-colour: #86fa86;
     --button-positive-hover-colour: #5cee5c;
+    --button-positive-focus-colour: #00d306;
+
     --button-negative-colour: #ffa6a6;
     --button-negative-hover-colour: #ee8787;
+    --button-negative-focus-colour: #ff615a;
+
 
     --link-unvisited: #0000EE;
     --link-visited: #551A8B;
 
     --input-focus: yellow;
-    --submit-focus: lime;
     --current-turn-background: #92ff45;
     --other-players-turn: orange;
     --waiting-for-new-game: yellow;
     --selected-dot-colour: #00e30b;
     --dot-colour: black;
+
+    --icon-colour: black;
+    --icon-hover-colour: #a5a5a5;
   }
 }
 
@@ -36,27 +45,36 @@
     --text-colour: white;
     --button-text-colour: white;
 
+    /* Button colours (4 button styles) */
     --button-colour: #4700ba;
-    --button-hover-colour: #2d0077;
+    --button-hover-colour: #350288;
+    --button-focus-colour: #24005e;
 
-    --button-secondry-colour: #ea0000;
-    --button-secondry-hover-colour: #9e0000;
+    --button-secondry-colour: #e86400;
+    --button-secondry-hover-colour: #af4d03;
+    --button-secondry-focus-colour: #8d4000;
 
-    --button-positive-colour: green;
-    --button-positive-hover-colour: darkGreen;
+    --button-positive-colour: #02a202;
+    --button-positive-hover-colour: #017d01;
+    --button-positive-focus-colour: #066100;
+
     --button-negative-colour: red;
-    --button-negative-hover-colour: darkRed;
+    --button-negative-hover-colour: #a40000;
+    --button-negative-focus-colour: #6e1313;
+
 
     --link-unvisited: orange;
     --link-visited: #c06400;
 
     --input-focus: yellow;
-    --submit-focus: #37d0cf;
     --current-turn-background: #008800;
     --other-players-turn: #a56b00;
     --waiting-for-new-game: #018b78;
     --selected-dot-colour: #00dede;
     --dot-colour: white;
+
+    --icon-colour: white;
+    --icon-hover-colour: #b1b1b1;
   }
 }
 
@@ -121,7 +139,7 @@ input:focus, select:focus {
 
 input[type=submit]:focus:not(.noFocusColour),.button:focus {
   outline: none;
-  background: var(--submit-focus);
+  background: var(--button-focus-colour);
 }
 
 .button, button, input[type=submit] {
@@ -135,10 +153,15 @@ input[type=submit]:focus:not(.noFocusColour),.button:focus {
 }
 .secondry {background: var(--button-secondry-colour) !important;}
 .secondry:hover {background: var(--button-secondry-hover-colour) !important;}
+.secondry:focus {background: var(--button-secondry-focus-colour) !important;}
+
 .positive {background: var(--button-positive-colour) !important;}
 .positive:hover {background: var(--button-positive-hover-colour) !important;}
+.positive:focus {background: var(--button-positive-focus-colour) !important;}
+
 .negative {background: var(--button-negative-colour) !important;}
 .negative:hover {background: var(--button-negative-hover-colour) !important;}
+.negative:focus {background: var(--button-negative-focus-colour) !important;}
 
 .listItem {
   padding: 1em 1.5em;

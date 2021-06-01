@@ -1,12 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require("bcrypt");
-const mongoose = require('mongoose')
-const User = require('../models/User')
-
-mongoose.connect(process.env.MONGO_DB_URL, {
-  useNewUrlParser: true, useUnifiedTopology: true
-})
+const mongoose = require('mongoose');
+const User = require('../models/User');
 
 router.get('/', (req, res) => {
   if (!(req.session.loggedIn)) return res.redirect("/login");

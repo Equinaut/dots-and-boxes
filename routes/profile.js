@@ -32,8 +32,7 @@ async function findFriends(userId) { //Finds list of all friends, including pend
 router.get('/', async (req, res) => {
   let user = req.session.user;
   if (req.session.loggedIn!=true) {
-    res.redirect("/login");
-    return;
+    return res.redirect("/login");
   }
 
   let stats = await User.findOne({username: req.session.user.username.toLowerCase()}).select("stats");
@@ -92,13 +91,18 @@ router.get('/:username', async (req, res) => {
 
   let friendStatus = null;
   let friendsSince = null;
+
   if (req.session.loggedIn) {
     friendStatus = -1;
-    for (let friend of userData.friends) {
-      if (friend.id.equals(req.session.user._id)) {
-        friendStatus = friend.status;
-        friendsSince = new Date(friend.friendsSince).toDateString();
-        break;
+    if (userData._id.equals(req.session.user._id)) {
+      friendStatus = -2;
+    } else {
+      for (let friend of userData.friends) {
+        if (friend.id.equals(req.session.user._id)) {
+          friendStatus = friend.status;
+          friendsSince = new Date(friend.friendsSince).toDateString();
+          break;
+        }
       }
     }
   }
@@ -141,19 +145,14 @@ router.post('/:username/friend', async (req, res) => { //Adds specified user as 
     friends: 1
   });
 
-  if (otherPlayer == null || thisPlayer == null) {
-    res.redirect("/profile/"+req.params.username); //If either player isn't found, then cancel action
-    return;
+  if (otherPlayer == null || thisPlayer == null) return res.redirect("/profile/"+req.params.username); //If either player isn't found, then cancel action
+  if (otherPlayer._id.equals(thisPlayer._id)) return res.redirect("/profile/"+req.params.username); //Stop if trying to friend yourself
+
+  for (let friend of thisPlayer.friends) {
+    if (friend.id.equals(otherPlayer._id)) return res.redirect("/profile/"+req.params.username); //If already friends then cancel
   }
 
   //Create objects that will be appended to friends array in database
-
-  for (let friend of thisPlayer.friends) {
-    if (friend.id.equals(otherPlayer._id)) {
-      return res.redirect("/profile/"+req.params.username);
-    }
-  }
-
   let friendObject1 = {
     status: 0,
     id: otherPlayer._id

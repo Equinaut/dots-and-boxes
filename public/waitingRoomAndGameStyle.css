@@ -20,6 +20,7 @@ body, .section  {
 .fullHeight {
   height: 100%;
 }
+
 /* Waiting Room */
 #roomDisplay {
   font-weight: bold;
@@ -60,14 +61,14 @@ body, .section  {
 
 .sliderContainer {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
 }
 
-.sliderContainer>p {
+.sliderContainer p {
   width: 6em;
 }
 
-.sliderContainer>input {
+.sliderContainer input {
   flex-grow: 1;
   margin: 0 1em;
   padding: 0;
@@ -96,13 +97,26 @@ body, .section  {
   padding-right: 20px;
   background: var(--other-players-turn);
   display: flex;
-
+  position: relative;
+  align-items: center;
+  border-radius: 1em;
 }
 .playerTurn {
-  margin: 0;
+  margin: 0px auto;
   padding: 8px;
-  flex-grow: 1;
 }
+#topBarIcons {
+  position: absolute;
+  right: 0;
+}
+.icon {
+  padding: 10px;
+  color: var(--icon-colour);
+}
+.icon:hover {
+  color: var(--icon-hover-colour);
+}
+
 
 .colourSample {
   box-sizing: content-box;
@@ -158,7 +172,45 @@ body, .section  {
   margin: 4px;
 }
 
-
+/* Settings screen (popup) */
+.settingsScreenFilter {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  background: black;
+  opacity: 75%;
+}
+.settingsScreenContainer {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+}
+.settingsScreen {
+  position: relative;
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  max-width: 700px;
+  max-height: 700px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  border: solid 5px;
+  border-radius: 2em;
+  background: var(--background-colour);
+  color: var(--text-colour);
+}
+.settingsScreen h2.settingsTitle {
+  width: 100%;
+  padding-bottom: 15px;
+  border-bottom: solid 2px;
+}
+#settingsCloseButton {
+  position: absolute;
+  top: 5px;
+  right: 15px;
+}
 
 @media only screen and (max-width: 750px) {
   #gameContainerInner, #board {

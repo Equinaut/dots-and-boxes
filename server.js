@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const http = require('http');
 const server = http.createServer(app);
+const mongoose = require('mongoose')
 
 const io = require('socket.io')(server, {
   cors: {
@@ -12,6 +13,10 @@ const io = require('socket.io')(server, {
 
 
 require('dotenv').config() //Load environment variables
+
+mongoose.connect(process.env.MONGO_DB_URL, {
+  useNewUrlParser: true, useUnifiedTopology: true
+});
 
 //Setup Sessions
 
@@ -123,8 +128,8 @@ app.get("/play/:roomCode", joinOrCreateGame, (req, res) => {
 
   res.render("gameAndWaitingRoom", {
     playerNumber: playerNum,
-    width: game.width,
-    height: game.height,
+    width: game.settings.width,
+    height: game.settings.height,
     room: game.room,
     role: role,
     admin: admin,
@@ -167,18 +172,18 @@ function sendGameState(game) { //Sends the current game state, whenever an updat
 io.on("connection", (socket) => {
   if (socket.handshake.session) {
     let roomCode = socket.handshake.session.roomCode;
-    if (socket.handshake.session.playerId) socket.join("Room:"+roomCode+"Player:"+socket.handshake.session.playerId);
+    if (socket.handshake.session.playerId) socket.join("Room:"+roomCode+"Player:"+socket.handshake.session.playerId); //Join socket room unique to gameCode and playerId
 
-    if (!(roomCode==null || roomCode=="")) { socket.join("Room:"+roomCode); }
+    if (!(roomCode==null || roomCode=="")) socket.join("Room:"+roomCode); //Join socket room unique to gameCode
     let game = games[roomCode];
     if (game==null) return;
     io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
 
     if (game.started) {
       io.to("Room:"+roomCode+"Player:"+socket.handshake.session.playerId).emit("gameStart", {
-        width: game.width,
-        height: game.height
-      });
+        width: game.settings.width,
+        height: game.settings.height
+      }); //If joining a game that has started, then send start command and send current gameState out.
       sendGameState(game);
     }
   }
@@ -209,15 +214,18 @@ io.on("connection", (socket) => {
   socket.on("sizeChange", (size) => { //Whenever user wants to change size setting of game
     let code = socket.handshake.session.roomCode;
     if (code=="" || code==null) return;
-    if (!(code in games)) return;
     let game = games[code];
     if (game==null) return;
 
     for (let player of game.players) {
       if (player.id==socket.handshake.session.playerId && player.admin) {
-        game.width = size.width || game.width;
-        game.height = size.height || game.height;
-        io.to("Room:"+game.room).emit("gridSize", game.width, game.height);
+        game.nextSettings.width = size.width || game.nextSettings.width;
+        game.nextSettings.height = size.height || game.nextSettings.height;
+        io.to("Room:"+game.room).emit("settingsSizeChange", game.nextSettings.width, game.nextSettings.height);
+        if (!game.roundStarted) {
+          game.settings = Object.assign({}, game.nextSettings);
+          io.to("Room:"+game.room).emit("resizeGrid", game.settings.width, game.settings.height);
+        }
       }
     }
   });
@@ -253,8 +261,8 @@ io.on("connection", (socket) => {
       if (player.id==socket.handshake.session.playerId && player.admin) { //Must have admin access
         game.started = true;
         io.to("Room:"+code).emit("gameStart", {
-          width: game.width,
-          height: game.height
+          width: game.settings.width,
+          height: game.settings.height
         });
         sendGameState(game);
         io.to("Room:" + game.room).emit("playerList", game.updatePlayerNames()); //Updates playerlist
@@ -272,6 +280,8 @@ io.on("connection", (socket) => {
     for (let player of game.players) {
       if (game.finished && player.id==socket.handshake.session.playerId && player.admin) { //Must have admin access
         game.restart();
+        game.settings = Object.assign({}, game.nextSettings);
+        io.to("Room:"+game.room).emit("resizeGrid", game.settings.width, game.settings.height);
         sendGameState(game);
         io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
       }
@@ -315,8 +325,8 @@ io.on("connection", (socket) => {
         if (player.id==socket.handshake.session.playerId) {
             if (player.connectedClients <= 1) {
             game.players.splice(i,1); //Remove player from list
-            socket.leave("Room:"+gameCode+"Player:"+socket.handshake.session.playerId);
-            socket.leave("Room:"+gameCode);
+            socket.leave("Room:"+gameCode+"Player:"+socket.handshake.session.playerId); //Leave socket room unique to playerId and gameCode
+            socket.leave("Room:"+gameCode); //Leave socket room unique to gameCode
             for (let j=0; j<game.players.length; j++) { //Renumber remaining players
               game.players[j].number = j;
 

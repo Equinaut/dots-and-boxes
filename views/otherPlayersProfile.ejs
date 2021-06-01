@@ -19,9 +19,8 @@
         <p> <span role=<%= user.role %>> <%= user.username %></span> has been a member since <b><%= user.createdAt %></b></p>
         <p> <span role=<%= user.role %>> <%= user.username %></span> was last online on <b><%= user.lastOnline %></b></p>
 
-        <br>
-
         <div class="friendSection">
+          <br>
           <% if (locals.user && user.friendStatus==0) { %> <!-- Incoming friend request -->
             <div class="equalColumns">
               <form id="acceptFriendForm" method="POST" action="<%= user.username %>/acceptFriend">
@@ -51,12 +50,11 @@
             <form id="addFriendForm" method="POST" action="<%= user.username %>/friend">
               <input type="submit" value="Add friend"/>
             </form>
-
           <% } %>
 
         </div>
-
         <br>
+
 
         <% if (locals.stats) { %>
           <h3><span role=<%= user.role %>> <%= user.username %>'s</span> stats </h3>
@@ -79,13 +77,13 @@
           </select>
 
           <form id="changeRoleForm" method="POST" action="<%= user.username %>/setRole">
-            <input type="submit" value="Change role"/>
+            <input type="submit" class="secondry" value="Change role"/>
           </form>
 
-          <button class="button" id="clearStatsButton" onclick="clearStatsButton()">Clear stats </button>
-          <button class="button secondry" id="cancelClearStatsButton" onclick="cancelClearStatsButton()" hidden>Cancel </button>
+          <button class="button secondry" id="clearStatsButton" onclick="clearStatsButton()">Clear stats </button>
+          <button class="button negative" id="cancelClearStatsButton" onclick="cancelClearStatsButton()" hidden>Cancel </button>
           <form id="clearStatsForm" method="POST" action="<%= user.username %>/clearStats">
-            <input type="submit" class="button secondry" id="clearStatsConfirmButton" value="Are you sure you want to clear <%= user.username %>'s stats?"/ hidden>
+            <input type="submit" class="button negative" id="clearStatsConfirmButton" value="Are you sure you want to clear <%= user.username %>'s stats?"/ hidden>
           </form>
           <script>
             function clearStatsButton() {
@@ -102,6 +100,7 @@
           <br>
         <% } %>
         <a class="button" href="/findUser">Find another user </a>
+        <a class="button" href="/profile">My account </a>
       <% } else { %>
           <h3>Find another user</h3>
           <form id="findUserForm" action="/profile/" method="GET">

@@ -3,8 +3,6 @@ const User = require('./models/User');
 
 class Game {
   constructor(room) {
-    this.width = 5;
-    this.height = 5;
     this.room = room;
     this.lines = [];
     this.squares = [];
@@ -13,6 +11,13 @@ class Game {
     this.winCounted = false;
     this.firstPlayerTurn = this.currentTurn;
     this.nextPlayerNumber = 1; //First player number
+
+    this.settings = {
+      width: 5,
+      height: 5,
+    }
+    this.nextSettings = Object.assign({}, this.settings);
+    this.roundStarted = false;
   }
 
   restart() {
@@ -21,11 +26,14 @@ class Game {
       this.firstPlayerTurn = (this.firstPlayerTurn+1) % this.players.length;
       this.currentTurn = this.firstPlayerTurn;
       this.winCounted = false;
+      this.roundStarted = false;
+
+      this.settings = Object.assign({}, this.nextSettings);
       for (let player of this.players) player.score = 0;
   }
 
   get finished() {
-    let finished = this.squares.length == (this.width-1) * (this.height-1);
+    let finished = this.squares.length == (this.settings.width-1) * (this.settings.height-1);
     if (!this.winCounted && finished) {
       let oneWinner = true; //If only one player has the most points (not a draw)
       let winner = null;
@@ -63,6 +71,7 @@ class Game {
     }
 
     for (let player of this.players) {
+      if (player.role==-1) continue;
       let stats = await User.findById(player.id, {stats: 1});
       if (stats.stats == undefined) {
         stats = {
@@ -73,8 +82,6 @@ class Game {
         };
         await User.findByIdAndUpdate(player.id, {stats: {}});
       }
-      console.log(player);
-      console.log(stats);
       if (player.score == topScore && amountOfTopScore == 1) {
         await User.findByIdAndUpdate(player.id, {
           "stats.wins": (stats.stats.wins+1) || 1,
@@ -95,8 +102,8 @@ class Game {
   }
 
   createLine(startPosition, endPosition, playerNumber) { //Creates a new line with the given coordinates
-    if (startPosition[0] >= this.width || endPosition[0] >= this.width ||
-        startPosition[1] >= this.height || endPosition[1] >= this.height ||
+    if (startPosition[0] >= this.settings.width || endPosition[0] >= this.settings.width ||
+        startPosition[1] >= this.settings.height || endPosition[1] >= this.settings.height ||
         Math.min(...startPosition) < 0 || Math.min(...endPosition) < 0) return;
 
     let newLine = new Line(startPosition, endPosition); //New line object
@@ -185,6 +192,8 @@ class Game {
        }
 
     }
+
+    if (doesntExist) this.roundStarted = true;
     return doesntExist; //Returns boolean, if the new line was created or not
   }
 
@@ -206,6 +215,7 @@ class Game {
     return players;
   }
 }
+
 class Line { //Class for line object
   constructor(startPosition, endPosition) {
     this.startPosition = [startPosition[0],startPosition[1]];

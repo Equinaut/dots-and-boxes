@@ -21,10 +21,10 @@ let selectedPosition; //Position of selected dot
 let lines = []; //Array of line objects
 let squares = [];
 
-if (document.getElementById("widthInput")) document.getElementById("widthInput").value = GRID_WIDTH;
-if (document.getElementById("heightInput")) document.getElementById("heightInput").value = GRID_HEIGHT;
-document.getElementById("widthDisplay").innerText = GRID_WIDTH;
-document.getElementById("heightDisplay").innerText = GRID_HEIGHT;
+for (let element of document.getElementsByClassName("widthInput")) element.value = GRID_WIDTH;
+for (let element of document.getElementsByClassName("heightInput")) element.value = GRID_HEIGHT;
+for (let element of document.getElementsByClassName("widthDisplay")) element.innerText = GRID_WIDTH;
+for (let element of document.getElementsByClassName("heightDisplay")) element.innerText = GRID_HEIGHT;
 
 function createLine(startPosition, endPosition) { //Creates a new line with the given coordinates
   let newLine = new Line(startPosition, endPosition); //New line object
@@ -149,28 +149,24 @@ document.getElementById("board").addEventListener("mouseup", (mouseEvent) => {
   }
 }); //End of mouse drag, new line will be created if valid
 
-function sizeChange(direction) {
+function sizeChange(direction, value) {
   let size = {};
   if (direction=="width") {
-    let width = document.getElementById("widthInput").value;
-    document.getElementById("widthDisplay").innerText = width;
-    GRID_WIDTH = width;
-    size.width = width;
+    for (let element of document.getElementsByClassName("widthDisplay")) element.innerText = value;
+    for (let element of document.getElementsByClassName("widthInput")) element.value = value;
+    size.width = value;
   } else if (direction=="height") {
-    let height = document.getElementById("heightInput").value;
-    document.getElementById("heightDisplay").innerText = height;
-    GRID_HEIGHT = height;
-    size.height = height;
+    for (let element of document.getElementsByClassName("heightDisplay")) element.innerText = value;
+    for (let element of document.getElementsByClassName("heightInput")) element.value = value;
+    size.height = value;
   }
   socket.emit("sizeChange", size);
 }
+
 function colourChange() {
   socket.emit("colourChange", document.getElementById("colourInput").value);
 }
 document.getElementById("colourInput").addEventListener("input", () => colourChange());
-
-if (document.getElementById("widthInput")) document.getElementById("widthInput").addEventListener("input", () => sizeChange("width"));
-if (document.getElementById("heightInput")) document.getElementById("heightInput").addEventListener("input", () => sizeChange("height"));
 
 if (document.getElementById("usernameInput")) {
   document.getElementById("usernameInput").addEventListener("keydown", (e) => {
@@ -192,14 +188,15 @@ function changeUsername() {
 socket.on("gameEnd", leave);
 socket.on("disconnect", leave);
 
-socket.on("becomeAdmin", () => {
-  for (let element of document.getElementsByClassName("adminSetting")) element.hidden = false
+socket.on("becomeAdmin", () => { //When a user inherits admin permissions in a room (happens to second player to join when first player leaves)
+  admin = true;
+  for (let element of document.getElementsByClassName("adminSetting")) element.hidden = !admin;
 });
-socket.on("newPlayerNum", (num) => {
-  playerNumber = num
+socket.on("newPlayerNum", (num) => { //When ever the player numbering changes (if someone leaves)
+  playerNumber = num;
 });
 
-socket.on("gameStart", (msg) => {
+socket.on("gameStart", (msg) => { //Called when the game starts, takes board size as a parameter and moves to the game phase
   lines = [];
   squares = [];
   GRID_WIDTH = msg.width || DEFAULT_WIDTH;
@@ -210,7 +207,6 @@ socket.on("gameStart", (msg) => {
 
 socket.on("gameState", (msg) => {
   //Runs whenever a new gameState is received
-  console.log("Gamestate received");
   currentTurn = msg.currentTurn;
   let newLines = [];
   let newSquares = [];
@@ -220,7 +216,7 @@ socket.on("gameState", (msg) => {
   lines = newLines;
   squares = newSquares;
   //Replace originals
-  if (document.getElementById("gameEndControls")) document.getElementById("gameEndControls").hidden = !(msg.finished)
+  if (document.getElementById("gameEndControls")) document.getElementById("gameEndControls").hidden = !(msg.finished && admin)
 
   if (msg.finished) { //If game finished
     document.getElementById("playerTurn").innerText="Waiting for game to start";
@@ -275,14 +271,22 @@ socket.on("playerList", (players) => { //When playerlist received from server
 });
 
 
-socket.on("gridSize", (width, height) => {
-  if (document.getElementById("widthInput")) document.getElementById("widthInput").value = width;
-  if (document.getElementById("heightInput")) document.getElementById("heightInput").value = height;
-  document.getElementById("widthDisplay").innerText = width;
-  document.getElementById("heightDisplay").innerText = height;
+socket.on("resizeGrid", (width, height) => {
   GRID_WIDTH = width;
   GRID_HEIGHT = height;
 });
 
+socket.on("settingsSizeChange", (width, height) => {
+  for (let element of document.getElementsByClassName("widthInput")) element.value = width;
+  for (let element of document.getElementsByClassName("heightInput")) element.value = height;
+  for (let element of document.getElementsByClassName("widthDisplay")) element.innerText = width;
+  for (let element of document.getElementsByClassName("heightDisplay")) element.innerText = height;
+});
+
+
+function toggleSettings() {
+  document.getElementById("settingsScreenFilter").hidden = !(document.getElementById("settingsScreenFilter").hidden);
+  document.getElementById("settingsScreenContainer").hidden = !(document.getElementById("settingsScreenContainer").hidden);
+}
 
 setInterval(draw, 50); //Calls the draw function every 50 ms
