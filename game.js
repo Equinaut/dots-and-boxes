@@ -62,7 +62,7 @@ class Game {
     let topScore = 0;
     let amountOfTopScore = 0;
     for (let player of this.players) {
-      if (player.score > topScore) {
+      if (player.score > topScore) { //Calculating winning score, and how many players had the winning score
         topScore = player.score;
         amountOfTopScore = 1;
       } else if (player.score == topScore) {
@@ -70,34 +70,22 @@ class Game {
       }
     }
 
-    for (let player of this.players) {
-      if (player.role==-1) continue;
-      let stats = await User.findById(player.id, {stats: 1});
-      if (stats.stats == undefined) {
-        stats = {
-          wins: 0,
-          losses: 0,
-          draws: 0,
-          boxes: 0
-        };
-        await User.findByIdAndUpdate(player.id, {stats: {}});
-      }
+    for (let player of this.players) { //Adds stats to each player
+      if (player.role==-1) continue; //Role is -1 for players who aren't logged in, so no stats need to be logged
+      let stats = await User.findById(player.id, {stats: 1}); //Fetch the stats of this player
+
+      if (stats.stats === undefined) stats.stats = {}; //Add an empty object if the stats are undefined
+      stats.stats.boxes = (stats.stats.boxes + player.score) || player.score || 0; //Add to the "boxes" stats
+
       if (player.score == topScore && amountOfTopScore == 1) {
-        await User.findByIdAndUpdate(player.id, {
-          "stats.wins": (stats.stats.wins+1) || 1,
-          "stats.boxes": (stats.stats.boxes+player.score) || (player.score) || 0
-        });
+        stats.stats.wins = (stats.stats.wins + 1) || 1;
       } else if (player.score == topScore) {
-        await User.findByIdAndUpdate(player.id, {
-          "stats.draws": (stats.stats.draws+1) || 1,
-          "stats.boxes": (stats.stats.boxes+player.score) || (player.score) || 0
-      });
+        stats.stats.draws = (stats.stats.draws + 1) || 1;
       } else {
-        await User.findByIdAndUpdate(player.id, {
-          "stats.losses": (stats.stats.losses+1) || 1,
-          "stats.boxes": (stats.stats.boxes+player.score) || (player.score) || 0
-      });
+        stats.stats.losses = (stats.stats.losses + 1) || 1;
       }
+      stats.markModified('stats'); //Tells Mongoose that the stats object has changed
+      await stats.save(); //Save changes to database
     }
   }
 

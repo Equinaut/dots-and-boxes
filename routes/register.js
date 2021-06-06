@@ -5,10 +5,7 @@ const mongoose = require('mongoose')
 const User = require('../models/User')
 
 router.get('/', (req, res) => {
-  if (req.session.loggedIn == true) {
-    res.redirect("/profile");
-    return;
-  }
+  if (req.session.loggedIn == true) { return res.redirect("/profile"); }
   res.render('register', {error: req.session.error})
   req.session.error = null;
 });

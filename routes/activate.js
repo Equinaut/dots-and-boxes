@@ -38,14 +38,13 @@ router.post('/:username', async (req, res) => {
     return;
   }
   else {
-    let user = await User.findOne({username: req.params.username});
-    if (user==null || user.role!=0) {
-      res.redirect("/activate");
-      return;
-    }
-    await User.updateOne({username: req.params.username}, {role: 1});
-    res.redirect("/activate");
-    return
+    let user = await User.findOne({username: req.params.username}, {role: 1});
+    if (user==null || user.role!=0) { return res.redirect("/activate"); }
+
+    user.role = 1;
+    await user.save();
+
+    return res.redirect("/activate");
   }
 });
 

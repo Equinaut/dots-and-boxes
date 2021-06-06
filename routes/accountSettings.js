@@ -16,31 +16,33 @@ router.post('/changePassword', async (req, res) => {
   let oldPassword = req.body.oldPassword;
   let newPassword = req.body.newPassword;
   let confirmNewPassword = req.body.confirmNewPassword;
+
   if (newPassword!=confirmNewPassword) {
     req.session.error = {message: "New password and confirm new password must match"};
     return res.redirect("/accountSettings");
   }
 
-  let user = User.findOne({username: req.session.user.username.toLowerCase()})
-  let userData = await user.select(
-    {
-      username: 1,
-      password: 1
-    });
-  console.log(user);
-  const passwordCorrect = await bcrypt.compare(oldPassword, userData.password); //Check password is correct
-  if (!passwordCorrect) {
+  let user = await User.findOne({username: req.session.user.username.toLowerCase()}, {
+    username: 1,
+    password: 1
+  });
+
+  const passwordCorrect = await bcrypt.compare(oldPassword, user.password); //Check password is correct
+
+  if (!passwordCorrect) { //Old password does not match the current users password
     req.session.error = {message: "Incorrect password"};
     return res.redirect('/accountSettings')
   }
 
-  let newPasswordHash = await bcrypt.hash(newPassword, 8);
-  console.log(newPasswordHash);
+  let newPasswordHash = await bcrypt.hash(newPassword, 8); //Generate hash of new password
+
   req.session.error = {message: "Password changed"};
   req.session.loggedIn = false;
   req.session.user = null;
 
-  await User.findByIdAndUpdate(userData._id, {password: newPasswordHash});
+  user.password = newPasswordHash;
+  await user.save(); //Save document with new password
+
   return res.redirect("/login");
 })
 

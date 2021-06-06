@@ -77,7 +77,7 @@
            <div class="topBar" id="topBar">
              <h4 class="playerTurn" id="playerTurn"></h4>
              <div class="icons" id="topBarIcons">
-
+               <span class="gameEndControls" <% if (!admin) { %>hidden<% } %>> <span onclick="restartGame()" class="icon fa fa-2x fa-redo-alt"> </span> </span>
                <span onclick="toggleSettings()" class="icon fa fa-2x fa-cog"> </span>
              </div>
            </div>
@@ -88,7 +88,7 @@
            <div class="playerList"> </div>
            <div class="inGameControls">
              <a href="/" class="button">Leave game</a>
-             <button id="gameEndControls" class="button" onclick="restartGame()" <% if (!admin) { %>hidden<% } %>>Restart Game</button>
+             <button class="gameEndControls button" onclick="restartGame()" <% if (!admin) { %>hidden<% } %>>Restart Game</button>
            </div>
          </div>
        </div>

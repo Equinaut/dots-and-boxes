@@ -163,30 +163,15 @@ router.post('/:username/friend', async (req, res) => { //Adds specified user as 
     id: thisPlayer._id
   };
 
-  if (thisPlayer.friends == null) { //Add friend object to this player
-    await User.findOneAndUpdate({_id: req.session.user._id}, {
-      friends: [friendObject1]
-    });
-  } else {
-    await User.findOneAndUpdate({_id: req.session.user._id}, {
-      $push: {
-        friends: friendObject1
-      }
-    });
-  };
+  if (thisPlayer.friends == null) { thisPlayer.friends = [friendObject1]; } //Add friend object to this player
+  else { thisPlayer.friends.push(friendObject1); }
 
-  if (otherPlayer.friends == null) { //Add friend object to other player
-    await User.findOneAndUpdate({username: req.params.username.toLowerCase()}, {
-      friends: [friendObject2]
-    });
-  } else {
-    await User.findOneAndUpdate({username: req.params.username.toLowerCase()}, {
-      $push: {
-        friends: friendObject2
-      }
-    });
-  };
+  if (otherPlayer.friends == null) { otherPlayer.friends = [friendObject2]; } //Add friend object to other player
+  else { otherPlayer.friends.push(friendObject2); }
 
+
+  await thisPlayer.save();
+  await otherPlayer.save();
   res.redirect("/profile/"+req.params.username);
 });
 
@@ -290,13 +275,11 @@ router.post('/:username/setRole', async (req, res) => { //Backend of form on pro
     return;
   }
   let user = await User.findOne({username: req.params.username.toLowerCase()}, {username: 1, role: 1});
-  if (user==null || user.role==3) {
-    res.redirect("/profile/"+req.params.username);
-    return;
-  }
-  await User.updateOne({username: req.params.username.toLowerCase()}, {role: req.body.role || 0});
-  res.redirect("/profile/"+req.params.username);
-  return
+  if (user==null || user.role==3) { return res.redirect("/profile/"+req.params.username); }
+
+  user.role = req.body.role || 0;
+  await user.save();
+  return res.redirect("/profile/"+req.params.username);
 });
 
 router.post('/:username/clearStats', async (req, res) => { //Backend of form on profile page, that allows admins to clear peoples stats
@@ -304,14 +287,12 @@ router.post('/:username/clearStats', async (req, res) => { //Backend of form on 
     res.redirect("/profile/"+req.params.username);
     return;
   }
-  let user = await User.findOne({username: req.params.username.toLowerCase()}, {username: 1});
-  if (user==null) {
-    res.redirect("/profile/"+req.params.username);
-    return;
-  }
-  await User.updateOne({username: req.params.username.toLowerCase()}, {stats: {}});
-  res.redirect("/profile/"+req.params.username);
-  return
+  let user = await User.findOne({username: req.params.username.toLowerCase()}, {username: 1, stats: 1});
+  if (user==null) {return res.redirect("/profile/"+req.params.username); }
+
+  user.stats = {};
+  await user.save();
+  return res.redirect("/profile/"+req.params.username);
 });
 
 module.exports = router

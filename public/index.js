@@ -141,7 +141,7 @@ document.getElementById("board").addEventListener("mouseup", (mouseEvent) => {
         selected = false;
       }
     } else {
-      if (currentTurn==playerNumber) {
+      if (currentTurn==playerNumber && dragEndPosition[0] < GRID_WIDTH && dragEndPosition[1] < GRID_HEIGHT) {
         selected = true;
         selectedPosition = dragEndPosition;
       }
@@ -216,7 +216,7 @@ socket.on("gameState", (msg) => {
   lines = newLines;
   squares = newSquares;
   //Replace originals
-  if (document.getElementById("gameEndControls")) document.getElementById("gameEndControls").hidden = !(msg.finished && admin)
+  for (let element of document.getElementsByClassName("gameEndControls")) element.hidden = !(msg.finished && admin);
 
   if (msg.finished) { //If game finished
     document.getElementById("playerTurn").innerText="Waiting for game to start";
@@ -274,6 +274,8 @@ socket.on("playerList", (players) => { //When playerlist received from server
 socket.on("resizeGrid", (width, height) => {
   GRID_WIDTH = width;
   GRID_HEIGHT = height;
+
+  if (selected && selectedPosition[0] >= GRID_WIDTH || selectedPosition[1] >= GRID_HEIGHT) selected = false;
 });
 
 socket.on("settingsSizeChange", (width, height) => {

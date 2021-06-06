@@ -60,7 +60,8 @@ const userSchema = new mongoose.Schema({
     }
   ]
 }, {
-  collection: "Users"
+  collection: "Users",
+  strict: false
 })
 
 module.exports = mongoose.model('Users', userSchema)
