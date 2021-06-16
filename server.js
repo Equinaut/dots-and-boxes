@@ -43,7 +43,6 @@ const {Player} = require("./player.js");
 //Empty games dictionary
 let games = {};
 
-
 const PORT = process.env.PORT || 3000;
 
 //Set public folder to serve static content
@@ -133,7 +132,8 @@ app.get("/play/:roomCode", joinOrCreateGame, (req, res) => {
     room: game.room,
     role: role,
     admin: admin,
-    SERVER_ADDRESS: process.env.SERVER_ADDRESS
+    SERVER_ADDRESS: process.env.SERVER_ADDRESS,
+    gamemode: game.settings.gamemode
   });
 });
 
@@ -155,12 +155,11 @@ app.use('/accountSettings', require('./routes/accountSettings'));
 app.get('*', (req, res) => {res.redirect("/")});
 
 
-
 function sendGameState(game) { //Sends the current game state, whenever an update happens such as someone placing a line
   io.to("Room:"+game.room).emit("gameState",
     {
       lines: game.lines,
-      squares: game.squares,
+      shapes: game.shapes,
       currentTurn: game.currentTurn,
       finished: game.finished
     }
@@ -213,7 +212,6 @@ io.on("connection", (socket) => {
 
   socket.on("sizeChange", (size) => { //Whenever user wants to change size setting of game
     let code = socket.handshake.session.roomCode;
-    if (code=="" || code==null) return;
     let game = games[code];
     if (game==null) return;
 
@@ -221,15 +219,34 @@ io.on("connection", (socket) => {
       if (player.id==socket.handshake.session.playerId && player.admin) {
         game.nextSettings.width = size.width || game.nextSettings.width;
         game.nextSettings.height = size.height || game.nextSettings.height;
-        io.to("Room:"+game.room).emit("settingsSizeChange", game.nextSettings.width, game.nextSettings.height);
+        io.to("Room:"+game.room).emit("settingsChange", "size", {width: game.nextSettings.width, height: game.nextSettings.height});
         if (!game.roundStarted) {
           game.settings = Object.assign({}, game.nextSettings);
-          io.to("Room:"+game.room).emit("resizeGrid", game.settings.width, game.settings.height);
+          io.to("Room:"+game.room).emit("nextSettings");
         }
       }
     }
   });
 
+  socket.on("settingsChange", (setting, value) => {
+    let code = socket.handshake.session.roomCode;
+    let game = games[code];
+    if (game==null) return;
+
+    for (let player of game.players) {
+      if (player.id==socket.handshake.session.playerId && player.admin) {
+        if (setting === "gamemode" && (value == 1 || value == 2)) {
+          game.nextSettings.gamemode = value;
+
+          io.to("Room:"+game.room).emit("settingsChange", "gamemode", value);
+          if (!game.roundStarted) {
+            game.settings = Object.assign({}, game.nextSettings);
+            io.to("Room:"+game.room).emit("nextSettings");
+          }
+        }
+      }
+    }
+  });
 
   socket.on("colourChange", (colour) => { //Whenever user wants to change their player colour
     let code = socket.handshake.session.roomCode;
@@ -280,8 +297,7 @@ io.on("connection", (socket) => {
     for (let player of game.players) {
       if (game.finished && player.id==socket.handshake.session.playerId && player.admin) { //Must have admin access
         game.restart();
-        game.settings = Object.assign({}, game.nextSettings);
-        io.to("Room:"+game.room).emit("resizeGrid", game.settings.width, game.settings.height);
+        io.to("Room:"+game.room).emit("nextSettings");
         sendGameState(game);
         io.to("Room:"+game.room).emit("playerList", game.updatePlayerNames()); //Sends updated player list
       }
@@ -346,9 +362,7 @@ io.on("connection", (socket) => {
       }
     }
   }
-
   socket.on("disconnecting", leave); //When socket disconnects
-
 });
 
 server.listen(PORT, () => { //Listens on PORT (defaults to 3000)

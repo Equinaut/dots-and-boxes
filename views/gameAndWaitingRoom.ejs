@@ -35,23 +35,32 @@
 
            <input id="colourInput" class="setting" type="color" list="presetColors">
            <datalist id="presetColors">
-           <option value="#ff0000"/>
-           <option value="#ff8000"/>
-           <option value="#ffff00"/>
-           <option value="#80ff00"/>
-           <option value="#00ff00"/>
-           <option value="#00ffff"/>
-           <option value="#0080ff"/>
-           <option value="#0000ff"/>
-           <option value="#8000ff"/>
-           <option value="#ff00ff"/>
+             <option value="#ff0000"/>
+             <option value="#ff8000"/>
+             <option value="#ffff00"/>
+             <option value="#80ff00"/>
+             <option value="#00ff00"/>
+             <option value="#00ffff"/>
+             <option value="#0080ff"/>
+             <option value="#0000ff"/>
+             <option value="#8000ff"/>
+             <option value="#ff00ff"/>
            </datalist>
            <button id="leaveButton" class="setting button" onclick="leave()">Leave waiting room</button>
 
 
 
            <button class="setting adminSetting button" onclick="startGameButton()" <% if (!admin) { %>hidden<% } %> >Start game</button>
-           <div class="setting size">
+
+           <h3> Gamemode </h3>
+           <p class="hideForAdmins" <% if (admin) { %>hidden<% } %> >Current gamemode: <span class="gamemodeDisplay"> </span> </p>
+           <select class="setting adminSetting gamemodeInput" onchange="settingsChange('gamemode', this.value)" <% if (!admin) { %>hidden<% } %> >
+             <option value="1">Square mode</option>
+             <option value="2">Triangle mode</option>
+           </select>
+
+           <div class="setting size widthAndHeight">
+
              <div class="sliderContainer">
                <p>Width: <span class="widthDisplay"> 5 </span></p>
                <input class="slider adminSetting widthInput" type="range" min=2 max=15 value=5 oninput="sizeChange('width', this.value)" <% if (!admin) { %>hidden<% } %>/>
@@ -62,9 +71,17 @@
              </div>
            </div>
 
+           <div class="setting size width" hidden>
+
+             <div class="sliderContainer">
+               <p>Size: <span class="widthDisplay"> 5 </span></p>
+               <input class="slider adminSetting widthInput" type="range" min=2 max=15 value=5 oninput="sizeChange('width', this.value)" <% if (!admin) { %>hidden<% } %>/>
+             </div>
+
+           </div>
 
          </div>
-          <div class="playerList"> </div>
+         <div class="playerList"> </div>
        </div>
 
      </div>
@@ -100,7 +117,17 @@
          <span onclick="toggleSettings()" id="settingsCloseButton" class="icon fa fa-3x fa-times-circle"></span>
          <h4>All changes to settings will start when the next round begins</h4>
 
-         <div class="setting size">
+         <p class="hideForAdmins" <% if (admin) { %>hidden<% } %> >Current gamemode: <span class="gamemodeDisplay"> </span> </p>
+
+         <div class="setting adminSetting " <% if (!admin) { %>hidden<% } %>>
+           <span>Gamemode: </span>
+           <select class="gamemodeInput" onchange="settingsChange('gamemode', this.value)">
+             <option value="1">Square mode</option>
+             <option value="2">Triangle mode</option>
+           </select>
+         </div>
+
+         <div class="setting size widthAndHeight">
            <div class="sliderContainer">
              <p>Width: <span class="widthDisplay"> 5 </span></p>
              <input class="slider adminSetting widthInput" type="range" min=2 max=15 value=5 oninput="sizeChange('width', this.value)" <% if (!admin) { %>hidden<% } %>/>
@@ -111,6 +138,15 @@
            </div>
          </div>
 
+         <div class="setting size width" hidden>
+
+           <div class="sliderContainer">
+             <p>Size: <span class="widthDisplay"> 5 </span></p>
+             <input class="slider adminSetting widthInput" type="range" min=2 max=15 value=5 oninput="sizeChange('width', this.value)" <% if (!admin) { %>hidden<% } %>/>
+           </div>
+
+         </div>
+
        </div>
      </div>
 
@@ -119,16 +155,18 @@
 
   <script>
     //Some vars are passed in to code
-    let GRID_WIDTH = <%= width || 5 %>; //Width of the grid in dots
-    let GRID_HEIGHT = <%= height || 5 %>; //Height of the grid in dots
+    let settings = {
+      width: <%= width || 5 %>, //Width of the grid in dots
+      height: <%= height || 5 %>, //Height of the grid in dots
+      gamemode: <%= gamemode || 2 %>
+    }
+
     let SERVER_ADDRESS = "<%= SERVER_ADDRESS %>";
     let playerNumber = <%= playerNumber || 0 %>;
     let admin = <%= admin || false %>;
 
   </script>
   <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
-  <script src="/square.js"></script>
-  <script src="/game.js"></script>
   <script src="/index.js"></script>
 
 </body>

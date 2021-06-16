@@ -4,8 +4,8 @@ const User = require('./models/User');
 class Game {
   constructor(room) {
     this.room = room;
-    this.lines = [];
-    this.squares = [];
+    this.lines = {};
+    this.shapes = [];
     this.players = [];
     this.currentTurn = 0;
     this.winCounted = false;
@@ -15,15 +15,17 @@ class Game {
     this.settings = {
       width: 5,
       height: 5,
+      gamemode: 1
     }
+
     this.nextSettings = Object.assign({}, this.settings);
     this.roundStarted = false;
   }
 
   restart() {
-      this.lines = [];
-      this.squares = [];
-      this.firstPlayerTurn = (this.firstPlayerTurn+1) % this.players.length;
+      this.lines = {};
+      this.shapes = [];
+      this.firstPlayerTurn = (this.firstPlayerTurn + 1) % this.players.length;
       this.currentTurn = this.firstPlayerTurn;
       this.winCounted = false;
       this.roundStarted = false;
@@ -33,7 +35,12 @@ class Game {
   }
 
   get finished() {
-    let finished = this.squares.length == (this.settings.width-1) * (this.settings.height-1);
+    let finished = this.shapes.length == (this.settings.width-1) * (this.settings.height-1);
+
+    if (this.settings.gamemode == 2) {
+      finished = this.shapes.length == (this.settings.width-1) * (this.settings.width-1);
+    }
+
     if (!this.winCounted && finished) {
       let oneWinner = true; //If only one player has the most points (not a draw)
       let winner = null;
@@ -89,100 +96,85 @@ class Game {
     }
   }
 
-  createLine(startPosition, endPosition, playerNumber) { //Creates a new line with the given coordinates
-    if (startPosition[0] >= this.settings.width || endPosition[0] >= this.settings.width ||
-        startPosition[1] >= this.settings.height || endPosition[1] >= this.settings.height ||
-        Math.min(...startPosition) < 0 || Math.min(...endPosition) < 0) return;
-
-    let newLine = new Line(startPosition, endPosition); //New line object
-    if (!(Math.abs(startPosition[0]-endPosition[0])+Math.abs(startPosition[1]-endPosition[1])==1)) return false; //Lines can only connect from each dot to adjacent dots, and not diagonal, length must be 1
-    let doesntExist = true;
-    for (let line of this.lines) {
-      if (newLine.equals(line)) doesntExist = false; //Finds if the new line already exists
+  checkShape(startPosition, endPosition, player, depth, visitedPoints) {
+    if (depth == null) {
+      if (this.settings.gamemode == 2) {
+        depth = 2;
+      } else {
+        depth = 3;
+      }
     }
-    if (doesntExist) { //If line is new then add to list
-      this.lines.push(newLine); //Add newLine to lines list
-      //Check if square was formed
+    if (visitedPoints == null) visitedPoints = [startPosition];
 
-      let topLines = [];
-      let bottomLines = [];
-      let rightLines = [];
-      let leftLines = [];
+    if (depth <= 0) {
+      if (startPosition.toString() == endPosition.toString()) {
+        this.boxFormed = true;
+        this.players[player].score += 1;
 
-      //Creates new line objects, for each of the lines in all 4 possible squares
-      topLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1] + 1], [newLine.startPosition[0] + 1, newLine.startPosition[1] + 1])); //Bottom
-      topLines.push(new Line([newLine.startPosition[0] + 1, newLine.startPosition[1]],     [newLine.startPosition[0] + 1, newLine.startPosition[1] + 1])); //Right
-      topLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1]],     [newLine.startPosition[0],     newLine.startPosition[1] + 1])); //Left
-      bottomLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1] - 1], [newLine.startPosition[0] + 1, newLine.startPosition[1] - 1])); //Top
-      bottomLines.push(new Line([newLine.startPosition[0] + 1, newLine.startPosition[1]],     [newLine.startPosition[0] + 1, newLine.startPosition[1] - 1])); //Right
-      bottomLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1]],     [newLine.startPosition[0],     newLine.startPosition[1] - 1])); //Left
-      rightLines.push(new Line([newLine.startPosition[0] - 1, newLine.startPosition[1]],     [newLine.startPosition[0] - 1,     newLine.startPosition[1] + 1])); //Left
-      rightLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1]],     [newLine.startPosition[0] - 1,     newLine.startPosition[1]])); //Top
-      rightLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1] + 1], [newLine.startPosition[0] - 1,     newLine.startPosition[1] + 1])); //Bottom
-      leftLines.push(new Line([newLine.startPosition[0] + 1, newLine.startPosition[1]],     [newLine.startPosition[0] + 1,     newLine.startPosition[1] + 1])); //Right
-      leftLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1]],     [newLine.startPosition[0] + 1,     newLine.startPosition[1]])); //Top
-      leftLines.push(new Line([newLine.startPosition[0],     newLine.startPosition[1] + 1], [newLine.startPosition[0] + 1,     newLine.startPosition[1] + 1])); //Bottom
+        this.shapes.push({
+          points: visitedPoints,
+          player: player
+        });
+      }
+    } else {
+      let node = this.lines[startPosition];
+      for (let childNode of node) {
+        if (childNode.toString() == startPosition.toString()) continue;
+        let notVisited = true;
+        for (let visitedNode of visitedPoints) {
+          if (childNode.toString() == visitedNode.toString()) notVisited = false;
+        }
 
-      let foundLinesTop = [false, false, false]; //Which of each of the 3 other lines are found when searching
-      let foundLinesBottom = [false, false, false];
-      let foundLinesRight = [false, false, false];
-      let foundLinesLeft = [false, false, false];
-
-      for (let i=0; i<3; i++) {
-        for (let line of this.lines) {
-          if (line.equals(topLines[i])) foundLinesTop[i] = true;
-          if (line.equals(bottomLines[i])) foundLinesBottom[i] = true;
-          if (line.equals(rightLines[i])) foundLinesRight[i] = true;
-          if (line.equals(leftLines[i])) foundLinesLeft[i] = true;
-
-          if (foundLinesTop[i] && foundLinesBottom[i] && foundLinesRight[i] && foundLinesLeft[i]) break;
+        if (notVisited) {
+          this.checkShape(childNode, endPosition, player, depth - 1, visitedPoints.concat([childNode]));
         }
       }
+    }
+  }
 
-      if (newLine.endPosition[1]==newLine.startPosition[1]) { //Horizontal line
-        if (foundLinesTop.toString() == [true, true, true].toString()) {
-          this.squares.push({
-            topLeft: newLine.startPosition,
-            player: playerNumber
-          });
-          this.players[playerNumber].score+=1;
-        }
-        if (foundLinesBottom.toString() == [true, true, true].toString()) {
-          this.squares.push({
-            topLeft: [newLine.startPosition[0],
-            newLine.startPosition[1] - 1], player: playerNumber
-          });
-          this.players[playerNumber].score+=1;
-        }
-      } else { //Vertical line
-        if (foundLinesRight.toString() == [true, true, true].toString()) {
-          this.squares.push({
-            topLeft: [newLine.startPosition[0] - 1,
-            newLine.startPosition[1]], player: playerNumber
-          });
-          this.players[playerNumber].score+=1;
-        }
-        if (foundLinesLeft.toString() == [true, true, true].toString()) {
-          this.squares.push({
-            topLeft: [newLine.startPosition[0],
-            newLine.startPosition[1]], player: playerNumber
-          });
-          this.players[playerNumber].score+=1;
-        }
+  createLine(startPosition, endPosition, playerNumber) {
+    this.boxFormed = false;
 
+    //Exit early if line already exists
+    if (this.lines[startPosition] && endPosition in this.lines[startPosition]) return false;
+    //Exit early if line is invalid
+    if (startPosition.toString() == endPosition.toString()) return false;
+
+    let distanceX = startPosition[0] - endPosition[0];
+    let distanceY = startPosition[1] - endPosition[1];
+
+    if (this.settings.gamemode == 1 && !(Math.abs(distanceX) + Math.abs(distanceY) == 1)) return false;
+
+    let validDirection = Math.abs(distanceX) + Math.abs(distanceY) == 1 || (distanceX == 1 && distanceY == 1) || (distanceX == -1 && distanceY == -1);
+    let onboardCheck1 = Math.min(...startPosition) >= 0 && Math.min(...endPosition) >= 0;
+    let onboardCheck2 = startPosition[1] < this.settings.width && endPosition[1] < this.settings.width;
+    let onboardCheck3 = startPosition[0] <= startPosition[1] && endPosition[0] <= endPosition[1];
+    if (this.settings.gamemode == 2 && !(validDirection && onboardCheck1 && onboardCheck2 && onboardCheck3)) return false;
+
+
+    if (!this.lines[startPosition]) this.lines[startPosition] = [endPosition];
+    else {
+      let exists = false;
+      for (let position of this.lines[startPosition]) {
+        if (position.toString() == endPosition.toString()) exists = true;
       }
-
-      if (!(newLine.endPosition[1]==newLine.startPosition[1] && (foundLinesTop.toString()    == [true, true, true].toString() ||
-          foundLinesBottom.toString() == [true, true, true].toString()) ||
-          newLine.endPosition[1]!=newLine.startPosition[1] && (foundLinesRight.toString()  == [true, true, true].toString() ||
-          foundLinesLeft.toString()   == [true, true, true].toString()))) {
-          this.currentTurn = (this.currentTurn+1) % this.players.length;
-       }
-
+      if (!exists) this.lines[startPosition].push(endPosition);
     }
 
-    if (doesntExist) this.roundStarted = true;
-    return doesntExist; //Returns boolean, if the new line was created or not
+    if (!this.lines[endPosition]) this.lines[endPosition] = [startPosition];
+    else {
+      let exists = false;
+      for (let position of this.lines[endPosition]) {
+        if (position.toString() == startPosition.toString()) exists = true;
+      }
+      if (!exists) this.lines[endPosition].push(startPosition);
+    }
+
+    this.checkShape(startPosition, endPosition, playerNumber);
+    this.roundStarted = true;
+    if (!this.boxFormed) this.currentTurn = (this.currentTurn+1) % this.players.length;
+    return true;
+
   }
 
   updatePlayerNames() {
@@ -204,24 +196,6 @@ class Game {
   }
 }
 
-class Line { //Class for line object
-  constructor(startPosition, endPosition) {
-    this.startPosition = [startPosition[0],startPosition[1]];
-    this.endPosition = [endPosition[0],endPosition[1]];
-    if (this.startPosition[0]+this.startPosition[1]>this.endPosition[0]+this.endPosition[1]) [this.startPosition, this.endPosition] = [this.endPosition, this.startPosition];
-  }
-  draw() { //Draws the line on the canvas
-    let canvasContext = boardCanvas.getContext("2d");
-    canvasContext.lineWidth = 8;
-    canvasContext.beginPath();
-    canvasContext.moveTo((this.startPosition[0]+0.5)*SQUARE_SIZE, (this.startPosition[1]+0.5)*SQUARE_SIZE);
-    canvasContext.lineTo((this.endPosition[0]+0.5)*SQUARE_SIZE, (this.endPosition[1]+0.5)*SQUARE_SIZE);
-    canvasContext.stroke();
-  }
-  equals(otherLine) { //Checks if a line is identical to the passed in line object
-    return this.startPosition.toString()==otherLine.startPosition.toString() && this.endPosition.toString()==otherLine.endPosition.toString();
-  }
-}
 
 module.exports.Game = Game;
-module.exports.Line = Line;
+// module.exports.Line = Line;
