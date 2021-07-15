@@ -58,7 +58,10 @@ const userSchema = new mongoose.Schema({
         ]
       }
     }
-  ]
+  ],
+  pattern: {
+    type: Object
+  }
 }, {
   collection: "Users",
   strict: false

@@ -24,7 +24,8 @@ router.post('/', async (req, res) => {
       displayName: 1,
       password: 1,
       role: 1,
-      createdAt: 1
+      createdAt: 1,
+      pattern: 1
     });
 
   if (user==null) { //Find if user exists
@@ -43,6 +44,7 @@ router.post('/', async (req, res) => {
       displayName: user.displayName,
       role: user.role,
       createdAt: user.createdAt,
+      pattern: user.pattern,
       _id: user._id
   };
 

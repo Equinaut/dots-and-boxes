@@ -6,12 +6,9 @@
   <link rel="stylesheet" href="/style.css">
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css
-
-
-
-">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 </head>
 <body>
   <div class="containerOuter">
@@ -31,21 +28,21 @@
                <button class="button" onclick="changeUsername()">Change username</button>
                <br>
              </div>
-           <% } %>
 
-           <input id="colourInput" class="setting" type="color" list="presetColors">
-           <datalist id="presetColors">
-             <option value="#ff0000"/>
-             <option value="#ff8000"/>
-             <option value="#ffff00"/>
-             <option value="#80ff00"/>
-             <option value="#00ff00"/>
-             <option value="#00ffff"/>
-             <option value="#0080ff"/>
-             <option value="#0000ff"/>
-             <option value="#8000ff"/>
-             <option value="#ff00ff"/>
-           </datalist>
+             <input id="colourInput" class="setting" type="color" list="presetColors">
+             <datalist id="presetColors">
+               <option value="#ff0000"/>
+               <option value="#ff8000"/>
+               <option value="#ffff00"/>
+               <option value="#80ff00"/>
+               <option value="#00ff00"/>
+               <option value="#00ffff"/>
+               <option value="#0080ff"/>
+               <option value="#0000ff"/>
+               <option value="#8000ff"/>
+               <option value="#ff00ff"/>
+             </datalist>
+           <% } %>
            <button id="leaveButton" class="setting button" onclick="leave()">Leave waiting room</button>
 
 
@@ -167,6 +164,7 @@
 
   </script>
   <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+  <script src="/draw.js"></script>
   <script src="/index.js"></script>
 
 </body>

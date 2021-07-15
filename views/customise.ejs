@@ -1,0 +1,82 @@
+<html>
+<head>
+  <title>Dots and Boxes </title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/userStyles.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    .colourInput {
+      width: 100%;
+      height: 4em;
+      padding: 2px;
+    }
+  </style>
+
+</head>
+<body>
+
+  <div id="titleBar">
+    <h1>Dots and Boxes</h1>
+  </div>
+
+  <div class="container">
+    <h2> Customise your shape </h2>
+    <h3> Preview </h3>
+    <canvas id="preview" width="100px" height="100px"> </canvas>
+
+    <form action="/customise" method="POST" id="customiseSquareForm">
+      <h3> Pattern type </h3>
+      <select id="chooseTypeSelect" name="pattern" onchange="patternChanged()" form="customiseSquareForm">
+        <option value="1" <% if (pattern.pattern == 1) { %>selected<% } %>>Solid colour</option>
+        <option value="2" <% if (pattern.pattern == 2) { %>selected<% } %>>Gradient</option>
+      </select>
+
+      <datalist id="presetColors">
+        <option value="#ff0000"/>
+        <option value="#ff8000"/>
+        <option value="#ffff00"/>
+        <option value="#80ff00"/>
+        <option value="#00ff00"/>
+        <option value="#00ffff"/>
+        <option value="#0080ff"/>
+        <option value="#0000ff"/>
+        <option value="#8000ff"/>
+        <option value="#ff00ff"/>
+      </datalist>
+
+      <input class="colourInput setting" type="color" list="presetColors" value="<% if (pattern.pattern == 1 && /#[0-9a-f]{6}/.test(pattern.colour)) { %><%= pattern.colour %><% } else { %>#FF0000<% } %>" name="colour" pattern=1 <% if (pattern.pattern != 1) { %>hidden<% } %>>
+      <input class="colourInput setting" type="color" list="presetColors" value="<% if (pattern.pattern == 2 && /#[0-9a-f]{6}/.test(pattern.colour[0])) { %><%= pattern.colour[0] %><% } else { %>#00FFFF<% } %>" name="colour" pattern=2 <% if (pattern.pattern != 2) { %>hidden<% } %>>
+      <input class="colourInput setting" type="color" list="presetColors" value="<% if (pattern.pattern == 2 && /#[0-9a-f]{6}/.test(pattern.colour[1])) { %><%= pattern.colour[1] %><% } else { %>#00FF00<% } %>" name="colour" pattern=2 <% if (pattern.pattern != 2) { %>hidden<% } %>>
+
+      <input type="submit" value="Save changes"> </input>
+      <a class="button" href="/profile">Exit without saving changes </a>
+
+    </form>
+  </div>
+
+
+
+  <script src="/draw.js"></script>
+  <script>
+    let preview = document.getElementById("preview");
+    let canvasContext = preview.getContext("2d");
+    setInterval(() => {
+      let pattern = {
+        pattern: document.getElementById("chooseTypeSelect").value
+      };
+      if (pattern.pattern == 1) {pattern.colour = document.querySelectorAll(".colourInput[pattern='1']")[0].value;}
+      else if (pattern.pattern == 2) {pattern.colour = [document.querySelectorAll(".colourInput[pattern='2']")[0].value, document.querySelectorAll(".colourInput[pattern='2']")[1].value];}
+
+      drawShape(canvasContext, pattern, [[0, 0], [300, 0], [300, 150], [0, 150]], 100)
+    }
+    , 50);
+
+    function patternChanged() {
+      for (let element of document.getElementsByClassName("colourInput"))  element.hidden = element.pattern != document.getElementById("chooseTypeSelect").value;
+    }
+  </script>
+</body>
+</html>

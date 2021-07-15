@@ -1,7 +1,7 @@
 const COLOURS = ["red", "green", "yellow", "blue", "brown", "cyan", "lime", "orange", "gold", "pink", "purple"];
 
 class Player {
-  constructor(id, playerNum, nextPlayerNum, admin, role, name) {
+  constructor(id, playerNum, nextPlayerNum, admin, role, name, pattern) {
     this.id = id;
 
     this.number = playerNum;
@@ -12,10 +12,15 @@ class Player {
     else this.role = role;
     this.score = 0;
     this.wins = 0;
-    this.pattern = {
-      pattern: (nextPlayerNum+1) % 2 + 1,
-      colour: COLOURS[(nextPlayerNum-1) % COLOURS.length]
-    };
+
+    if (pattern == null) {
+      this.pattern = {
+        pattern: 1,
+        colour: COLOURS[(nextPlayerNum-1) % COLOURS.length]
+      };
+    } else {
+      this.pattern = pattern;
+    }
 
     this.admin = admin;
 

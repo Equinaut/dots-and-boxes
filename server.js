@@ -2,7 +2,8 @@ const express = require('express');
 const app = express();
 const http = require('http');
 const server = http.createServer(app);
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const User = require('./models/User');
 
 const io = require('socket.io')(server, {
   cors: {
@@ -55,7 +56,7 @@ app.get('/', (req, res) => {
   res.render("joinScreen", {error: error, loggedIn: req.session.loggedIn});
 });
 
-function joinOrCreateGame(req, res, next) {
+async function joinOrCreateGame(req, res, next) {
   let code = req.params.roomCode;
 
   if (!(/^[a-zA-Z0-9]{1,25}$/.test(code))) {
@@ -89,20 +90,57 @@ function joinOrCreateGame(req, res, next) {
 
   let role = -1;
   let name = null;
+  let pattern = null;
+
   if (req.session.loggedIn==true) {
+
+
+    let user = await User.findOne(
+      {
+        _id: req.session.user._id
+      }, {
+        username: 1,
+        displayName: 1,
+        password: 1,
+        role: 1,
+        createdAt: 1,
+        pattern: 1
+      });
+
+    if (user==null) { //Find if user exists
+      req.session.error = {message: "User doesn't exist"};
+      return res.redirect('/login')
+    }
+
+    let userObject = {
+        username: user.username,
+        displayName: user.displayName,
+        role: user.role,
+        createdAt: user.createdAt,
+        pattern: user.pattern,
+        _id: user._id
+    };
+
+    user.lastOnline = Date.now() || 0; //Update lastOnline field
+    await user.save();
+
+    req.session.user = userObject;
+
     if (req.session.user.role==0 || req.session.user.role==null) {
       req.session.error = {message: "Your account is not activated, please wait while an admin activates your account."};
       return res.redirect("/");
     }
     role = req.session.user.role;
     name = req.session.user.displayName;
+    pattern = req.session.user.pattern;
   }
 
   let admin = false; //Check if admin access
   if (game.players.length==0) admin = true;
   if (req.session.loggedIn && (req.session.user.role == 2 || req.session.user.role == 3)) admin = true; //Give admins and moderators admin access in any room they join
 
-  let newPlayer = new Player(req.session.playerId, playerNum, game.nextPlayerNumber++, admin, role, name);
+
+  let newPlayer = new Player(req.session.playerId, playerNum, game.nextPlayerNumber++, admin, role, name, pattern);
 
   //New player created
   game.players.push(newPlayer); //Add new player object to room
@@ -151,6 +189,7 @@ app.use('/profile', require('./routes/profile'));
 app.get("/findUser", (req, res) => {res.render("otherPlayersProfile");});
 app.use('/activate', require('./routes/activate'));
 app.use('/accountSettings', require('./routes/accountSettings'));
+app.use('/customise', require('./routes/customise'));
 
 app.get('*', (req, res) => {res.redirect("/")});
 

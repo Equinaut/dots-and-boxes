@@ -4,7 +4,9 @@ const User = require('./models/User');
 class Game {
   constructor(room) {
     this.room = room;
+
     this.lines = {};
+
     this.shapes = [];
     this.players = [];
     this.currentTurn = 0;
@@ -35,10 +37,10 @@ class Game {
   }
 
   get finished() {
-    let finished = this.shapes.length == (this.settings.width-1) * (this.settings.height-1);
+    let finished = this.shapes.length >= (this.settings.width-1) * (this.settings.height-1);
 
     if (this.settings.gamemode == 2) {
-      finished = this.shapes.length == (this.settings.width-1) * (this.settings.width-1);
+      finished = this.shapes.length >= (this.settings.width-1) * (this.settings.width-1);
     }
 
     if (!this.winCounted && finished) {
@@ -98,10 +100,10 @@ class Game {
 
   checkShape(startPosition, endPosition, player, depth, visitedPoints) {
     if (depth == null) {
-      if (this.settings.gamemode == 2) {
+      if (this.settings.gamemode == 2) { //Triangle mode
         depth = 2;
       } else {
-        depth = 3;
+        depth = 3; //Square mode (Default)
       }
     }
     if (visitedPoints == null) visitedPoints = [startPosition];
@@ -134,6 +136,7 @@ class Game {
 
   createLine(startPosition, endPosition, playerNumber) {
     this.boxFormed = false;
+    let lineFormed = false;
 
     //Exit early if line already exists
     if (this.lines[startPosition] && endPosition in this.lines[startPosition]) return false;
@@ -152,27 +155,39 @@ class Game {
     if (this.settings.gamemode == 2 && !(validDirection && onboardCheck1 && onboardCheck2 && onboardCheck3)) return false;
 
 
-    if (!this.lines[startPosition]) this.lines[startPosition] = [endPosition];
-    else {
+    if (!this.lines[startPosition]) {
+      lineFormed = true;
+      this.lines[startPosition] = [endPosition];
+    } else {
       let exists = false;
       for (let position of this.lines[startPosition]) {
         if (position.toString() == endPosition.toString()) exists = true;
       }
-      if (!exists) this.lines[startPosition].push(endPosition);
+      if (!exists) {
+        lineFormed = true;
+        this.lines[startPosition].push(endPosition);
+      }
     }
 
-    if (!this.lines[endPosition]) this.lines[endPosition] = [startPosition];
-    else {
+    if (!this.lines[endPosition]) {
+      lineFormed = true;
+      this.lines[endPosition] = [startPosition];
+    } else {
       let exists = false;
       for (let position of this.lines[endPosition]) {
         if (position.toString() == startPosition.toString()) exists = true;
       }
-      if (!exists) this.lines[endPosition].push(startPosition);
+      if (!exists) {
+        lineFormed = true;
+        this.lines[endPosition].push(startPosition);
+      }
     }
 
-    this.checkShape(startPosition, endPosition, playerNumber);
-    this.roundStarted = true;
-    if (!this.boxFormed) this.currentTurn = (this.currentTurn+1) % this.players.length;
+    if (lineFormed) {
+      this.checkShape(startPosition, endPosition, playerNumber);
+      this.roundStarted = true;
+      if (!this.boxFormed) this.currentTurn = (this.currentTurn+1) % this.players.length;
+    }
     return true;
 
   }
@@ -198,4 +213,3 @@ class Game {
 
 
 module.exports.Game = Game;
-// module.exports.Line = Line;

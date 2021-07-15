@@ -5,8 +5,7 @@ const User = require('../models/User')
 
 router.get('/', async (req, res) => {
   if (!(req.session.loggedIn == true && req.session.user.role==3)) {
-    res.redirect("/profile");
-    return;
+    return res.redirect("/profile");
   }
   else {
     let notActivatedUsers = await User.find({role: 0}).sort({ createdAt: 'desc' });
