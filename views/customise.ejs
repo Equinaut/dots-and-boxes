@@ -30,8 +30,8 @@
     <form action="/customise" method="POST" id="customiseSquareForm">
       <h3> Pattern type </h3>
       <select id="chooseTypeSelect" name="pattern" onchange="patternChanged()" form="customiseSquareForm">
-        <option value="1" <% if (pattern.pattern == 1) { %>selected<% } %>>Solid colour</option>
-        <option value="2" <% if (pattern.pattern == 2) { %>selected<% } %>>Gradient</option>
+        <option value="1" <% if (pattern && pattern.pattern == 1) { %>selected<% } %>>Solid colour</option>
+        <option value="2" <% if (pattern && pattern.pattern == 2) { %>selected<% } %>>Gradient</option>
       </select>
 
       <datalist id="presetColors">
@@ -47,9 +47,9 @@
         <option value="#ff00ff"/>
       </datalist>
 
-      <input class="colourInput setting" type="color" list="presetColors" value="<% if (pattern.pattern == 1 && /#[0-9a-f]{6}/.test(pattern.colour)) { %><%= pattern.colour %><% } else { %>#FF0000<% } %>" name="colour" pattern=1 <% if (pattern.pattern != 1) { %>hidden<% } %>>
-      <input class="colourInput setting" type="color" list="presetColors" value="<% if (pattern.pattern == 2 && /#[0-9a-f]{6}/.test(pattern.colour[0])) { %><%= pattern.colour[0] %><% } else { %>#00FFFF<% } %>" name="colour" pattern=2 <% if (pattern.pattern != 2) { %>hidden<% } %>>
-      <input class="colourInput setting" type="color" list="presetColors" value="<% if (pattern.pattern == 2 && /#[0-9a-f]{6}/.test(pattern.colour[1])) { %><%= pattern.colour[1] %><% } else { %>#00FF00<% } %>" name="colour" pattern=2 <% if (pattern.pattern != 2) { %>hidden<% } %>>
+      <input class="colourInput setting" type="color" list="presetColors" value="<% if (pattern && pattern.pattern == 1 && /#[0-9a-f]{6}/.test(pattern.colour)) { %><%= pattern.colour %><% } else { %>#FF0000<% } %>" name="colour" pattern=1 <% if (pattern && pattern.pattern != 1) { %>hidden<% } %>>
+      <input class="colourInput setting" type="color" list="presetColors" value="<% if (pattern && pattern.pattern == 2 && /#[0-9a-f]{6}/.test(pattern.colour[0])) { %><%= pattern.colour[0] %><% } else { %>#00FFFF<% } %>" name="colour" pattern=2 <% if (pattern == null || pattern.pattern != 2) { %>hidden<% } %>>
+      <input class="colourInput setting" type="color" list="presetColors" value="<% if (pattern && pattern.pattern == 2 && /#[0-9a-f]{6}/.test(pattern.colour[1])) { %><%= pattern.colour[1] %><% } else { %>#00FF00<% } %>" name="colour" pattern=2 <% if (pattern == null || pattern.pattern != 2) { %>hidden<% } %>>
 
       <input type="submit" value="Save changes"> </input>
       <a class="button" href="/profile">Exit without saving changes </a>
