@@ -55,7 +55,7 @@ body, .section  {
   margin: 5px;
 }
 
-.adminSettings>h3 {
+.adminSettings > h3 {
   margin: 5px;
 }
 
@@ -76,17 +76,32 @@ body, .section  {
 
 /* Main Game Screen */
 
-.player {  /* Player object in player list */
+.playerOuter {
+  --angle: 0deg;
+  margin: -3px 10px 10px 10px;
+  border-radius: 1em;
+  /* background: conic-gradient(from var(--angle), blue, red); */
+  background: conic-gradient(red 0deg var(--angle), white var(--angle) 360deg);
+  padding: 3px;
+}
+
+.playerInner {  /* Player object in player list */
   padding: 10px;
   display: flex;
   justify-content: space-between;
-  margin: -3px 10px 10px 10px;
-  border: solid 3px;
+
+  /* border: solid 3px; */
   border-radius: 1em;
+  background: var(--background-colour);
+  position: relative;
 }
 
-.player>p {
+.playerInner > p {
   padding: 5px;
+}
+
+.disconnected {
+  text-decoration: line-through;
 }
 
 .playerList {
@@ -133,7 +148,8 @@ body, .section  {
 }
 
 .thisPlayer {
-  border: solid 5px;
+  background: white;
+  padding: 5px;
 }
 
 #gameContainerOuter {

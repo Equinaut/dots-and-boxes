@@ -155,7 +155,8 @@
     let settings = {
       width: <%= width || 5 %>, //Width of the grid in dots
       height: <%= height || 5 %>, //Height of the grid in dots
-      gamemode: <%= gamemode || 2 %>
+      gamemode: <%= gamemode || 2 %>,
+      disconnectTimeout: <%= disconnectTimeout || 120 %>,
     }
 
     let SERVER_ADDRESS = "<%= SERVER_ADDRESS %>";

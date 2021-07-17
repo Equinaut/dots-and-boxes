@@ -22,6 +22,7 @@ let selectedPosition = [0, 0]; //Position of selected dot
 
 let lines = {}; //Array of line objects
 let shapes = [];
+let wheelTimers = [];
 
 //Set all settings menus to display the current settings
 for (let element of document.getElementsByClassName("widthInput")) element.value = settings.width;
@@ -223,9 +224,12 @@ socket.on("playerList", (players) => { //When playerlist received from server
   let playerListElements = document.getElementsByClassName("playerList");
   for (let element of playerListElements) element.innerHTML = ""; //Clear list
 
+  for (let interval of wheelTimers) clearInterval(interval);
+
   for (let player of players) {
     for (let element of playerListElements) {
       //Create item for list
+      let newPlayerRowOuter = document.createElement("div");
       let newPlayerRow = document.createElement("div");
       let newPlayer = document.createElement("p");
       newPlayer.innerHTML = (player.number+1)+". <span role=" + player.role + ">" + player.name + "</span>";
@@ -236,18 +240,32 @@ socket.on("playerList", (players) => { //When playerlist received from server
       }
 
       //Add player number and name to p tag in row
-      newPlayerRow.classList.add("player"); //Add the player class to this
+      newPlayerRow.classList.add("playerInner"); //Add the player class to this
+      newPlayerRowOuter.classList.add("playerOuter");
+
+      player.disconnectProgressWheelAngle = 0;
+      if (player.disconnectTimeout != null) {
+        newPlayer.classList.add("disconnected");
+        disconnectProgressWheelAngle = 360 - 360 * (player.disconnectTimeout / 10);
+        let interval = setInterval((player) => {
+          player.disconnectProgressWheelAngle += 1;
+          newPlayerRowOuter.style.setProperty("--angle", player.disconnectProgressWheelAngle+"deg");
+        }, settings.disconnectTimeout * 50 / 9, player);
+
+        wheelTimers.push(interval);
+      }
+      newPlayerRowOuter.style.setProperty("--angle", player.disconnectProgressWheelAngle+"deg");
 
       if (PHASE == 1 && player.number == currentTurn) newPlayerRow.classList.add("currentTurn");
       let colourSample = document.createElement("canvas");
       colourSample.classList.add("colourSample");
 
-      if (player.number == playerNumber) newPlayerRow.classList.add("thisPlayer");
+      if (player.number == playerNumber) newPlayerRowOuter.classList.add("thisPlayer");
 
       newPlayerRow.appendChild(newPlayer);
       newPlayerRow.appendChild(colourSample);
-
-      element.appendChild(newPlayerRow); //Adds elements to list
+      newPlayerRowOuter.appendChild(newPlayerRow);
+      element.appendChild(newPlayerRowOuter); //Adds elements to list
     }
   }
 });

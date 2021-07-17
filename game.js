@@ -22,6 +22,7 @@ class Game {
 
     this.nextSettings = Object.assign({}, this.settings);
     this.roundStarted = false;
+    this.timeouts = [];
   }
 
   restart() {
@@ -197,6 +198,9 @@ class Game {
     for (let player of this.players) {
       let role = player.role;
       if (role==null) role = -1;
+
+      let disconnectTimeout = null;
+      if (player.disconnectedAt != null) disconnectTimeout = process.env.DISCONNECT_TIMEOUT - (new Date() - player.disconnectedAt) / 1000;
       players.push(
         {
           name: player.name || "Unknown player",
@@ -204,7 +208,8 @@ class Game {
           pattern: player.pattern,
           score: player.score || 0,
           wins: player.wins || 0,
-          role: role
+          role: role,
+          disconnectTimeout: disconnectTimeout
        });
     }
     return players;

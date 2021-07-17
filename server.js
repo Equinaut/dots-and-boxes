@@ -76,6 +76,7 @@ async function joinOrCreateGame(req, res, next) {
     if (player.id==req.session.playerId) { //Joining when already in the game (On other clients)
       req.session.roomCode = code;
       player.connectedClients++; //Add one to connected clients count
+      player.disconnectedAt = null;
       next(); //Continue to join game;
       return;
     }
@@ -167,6 +168,7 @@ app.get("/play/:roomCode", joinOrCreateGame, (req, res) => {
     playerNumber: playerNum,
     width: game.settings.width,
     height: game.settings.height,
+    disconnectTimeout: process.env.DISCONNECT_TIMEOUT,
     room: game.room,
     role: role,
     admin: admin,
@@ -356,51 +358,66 @@ io.on("connection", (socket) => {
 
 
   function leave() { //Function to handle user leaving game or disconnecting
-
     let gameCode = socket.handshake.session.roomCode;
 
-    let game = games[gameCode];
+    let game = games[gameCode]; //Find the game object
     if (game==null) return;
     let thisPlayer = null;
     for (let player of game.players) {
-      if (player.id == socket.handshake.session.playerId) thisPlayer = player;
+      if (player.id == socket.handshake.session.playerId) thisPlayer = player; //Find the player object for this player
     }
 
-    if ((game.started || game.players.length == 1) && thisPlayer.connectedClients <= 1) { //If game has started then end it
+    let currentPlayers = 0;
+    for (let player of game.players) {
+      if (player.disconnectedAt == null) currentPlayers += 1;
+    }
 
+    if (thisPlayer.connectedClients > 1) thisPlayer.connectedClients --; //If user is connected on multiple clients, then decrease the number of connectedClients
+
+    else if (currentPlayers <= 1) { //Case when user is only person in game (Close down game in this situation)
       io.to("Room:"+gameCode).emit("gameEnd");
-      if (!(gameCode in games)) return;
-      delete games[gameCode];
+      for (let timeout of game.timeouts) clearTimeout(timeout);
+      if (gameCode in games) delete games[gameCode];
       io.of("/").adapter.rooms.delete("Room:"+gameCode);
 
-    } else { //Otherwise just remove player from playerlist as game is still in waiting room
-
+    } else if (!game.started) { //Case when the game is in the waiting room phase (user leaves, but game carries on)
       for (let i=0; i<game.players.length; i++) {
         player = game.players[i];
-        if (player.id==socket.handshake.session.playerId) {
-            if (player.connectedClients <= 1) {
-            game.players.splice(i,1); //Remove player from list
-            socket.leave("Room:"+gameCode+"Player:"+socket.handshake.session.playerId); //Leave socket room unique to playerId and gameCode
-            socket.leave("Room:"+gameCode); //Leave socket room unique to gameCode
-            for (let j=0; j<game.players.length; j++) { //Renumber remaining players
-              game.players[j].number = j;
+        if (player.id == socket.handshake.session.playerId) {
+          game.players.splice(i,1); //Remove player from list
+          socket.leave("Room:"+gameCode+"Player:"+socket.handshake.session.playerId); //Leave socket room unique to playerId and gameCode
+          socket.leave("Room:"+gameCode); //Leave socket room unique to gameCode
+          for (let j=0; j<game.players.length; j++) { //Renumber remaining players
+            game.players[j].number = j;
 
-              io.to("Room:"+gameCode+"Player:"+game.players[j].id).emit("newPlayerNum", j);
-              if (j==0) { //Give admin to new player 0
-                game.players[j].admin = true;
-                io.to("Room:"+gameCode+"Player:"+game.players[j].id).emit("becomeAdmin");
-              }
+            io.to("Room:"+gameCode+"Player:"+game.players[j].id).emit("newPlayerNum", j);
+            if (j==0) { //Give admin to new player 0
+              game.players[j].admin = true; //Give the first person on the list admin access
+              io.to("Room:"+gameCode+"Player:"+game.players[j].id).emit("becomeAdmin");
             }
-
-            io.to("Room:" + game.room).emit("playerList", game.updatePlayerNames()); //Updates playerlist
-            return;
-          } else {
-            player.connectedClients--;
           }
+
+          io.to("Room:" + game.room).emit("playerList", game.updatePlayerNames()); //Updates playerlist
         }
       }
+    } else { //Case when person leaves on last device, while a game is running with more than 1 person
+      thisPlayer.connectedClients --;
+      thisPlayer.disconnectedAt = new Date();
+      io.to("Room:" + game.room).emit("playerList", game.updatePlayerNames()); //Updates playerlist
+
+      let timeout = setTimeout(() => {
+        if (thisPlayer.disconnectedAt == null) return;
+        if (new Date() - thisPlayer.disconnectedAt > process.env.DISCONNECT_TIMEOUT * 1000) { //End the game if someone leaves and doesn't rejoin
+          io.to("Room:"+gameCode).emit("gameEnd");
+          for (let timeout of game.timeouts) clearTimeout(timeout);
+          if (gameCode in games) delete games[gameCode];
+          io.of("/").adapter.rooms.delete("Room:"+gameCode);
+        }
+      }, process.env.DISCONNECT_TIMEOUT * 1000 + 100);
+      game.timeouts.push(timeout);
     }
   }
+
   socket.on("disconnecting", leave); //When socket disconnects
 });
 

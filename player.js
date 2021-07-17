@@ -25,6 +25,7 @@ class Player {
     this.admin = admin;
 
     this.connectedClients = 1;
+    this.disconnectedAt = null; //Time at which the user disconnected if they disconnect during a game
   }
 }
 
