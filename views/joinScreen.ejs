@@ -20,8 +20,10 @@
 
     <form action="/" method="GET" class="joinForm wide" id="joinForm">
         <input type="text" placeholder="Room code" maxLength=25 name="code" id="joinFormRoomCode"/>
-        <input type="submit" value="Join Game" />
+        <button class="button" id="joinButton"> Join Game </button>
+        <button type="button" class="button" id="spectateButton"> Spectate Game </button>
     </form>
+
     <br>
     <% if (loggedIn!=true) { %>
       <a href="/login" class="button">Login</a>
@@ -29,12 +31,19 @@
     <% } else {%>
       <a href="/profile" class="button">View account</a>
     <% }%>
+
   </div>
 
   <script>
     document.getElementById("joinForm").addEventListener("submit", (e) => { //Go to users profile
       window.location.href="/play/"+document.getElementById("joinFormRoomCode").value;
       e.preventDefault();
+    });
+    document.getElementById("joinButton").addEventListener("click", (e) => {
+      window.location.href="/play/"+document.getElementById("joinFormRoomCode").value;
+    });
+    document.getElementById("spectateButton").addEventListener("click", (e) => {
+      window.location.href="/spectate/"+document.getElementById("joinFormRoomCode").value;
     });
   </script>
 </body>

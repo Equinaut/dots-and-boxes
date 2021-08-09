@@ -80,8 +80,7 @@ body, .section  {
   --angle: 0deg;
   margin: -3px 10px 10px 10px;
   border-radius: 1em;
-  /* background: conic-gradient(from var(--angle), blue, red); */
-  background: conic-gradient(red 0deg var(--angle), white var(--angle) 360deg);
+  background: conic-gradient(red 0deg var(--angle), var(--button-text-colour) var(--angle) 360deg);
   padding: 3px;
 }
 
@@ -148,7 +147,7 @@ body, .section  {
 }
 
 .thisPlayer {
-  background: white;
+  background: var(--text-colour);
   padding: 5px;
 }
 

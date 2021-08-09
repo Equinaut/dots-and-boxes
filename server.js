@@ -20,12 +20,12 @@ mongoose.connect(process.env.MONGO_DB_URL, {
 });
 
 //Setup Sessions
-
 var session = require("express-session")({
     secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: true
 });
+
 var sharedsession = require("express-socket.io-session");
 app.use(session);
 io.use(sharedsession(session, {
@@ -56,7 +56,9 @@ app.get('/', (req, res) => {
   res.render("joinScreen", {error: error, loggedIn: req.session.loggedIn});
 });
 
+
 async function joinOrCreateGame(req, res, next) {
+  //Joins player into game object if it exists, otherwise creates game with the player in it
   let code = req.params.roomCode;
 
   if (!(/^[a-zA-Z0-9]{1,25}$/.test(code))) {
@@ -65,38 +67,56 @@ async function joinOrCreateGame(req, res, next) {
   }
 
   if (!(code in games)) {
-    games[code] = new Game(code);
+    if (res.locals.spectator) {
+      req.session.error = {message: "Game not found"};
+      return res.redirect("/"); //Spectators can't join a game that doesn't exist
+    } else {
+      games[code] = new Game(code); //If a player tries to join a game that doesn't exist, then it is created
+    }
   }
-  let game = games[code];
+  let game = games[code]; //Get game object
 
   req.session.playerId = req.sessionID;
-  if (req.session.loggedIn) req.session.playerId = req.session.user._id;
+  if (req.session.loggedIn) req.session.playerId = req.session.user._id; //Get player id which is either their session id or user id if they are logged in
 
-  for (let player of game.players) {
-    if (player.id==req.session.playerId) { //Joining when already in the game (On other clients)
-      req.session.roomCode = code;
-      player.connectedClients++; //Add one to connected clients count
-      player.disconnectedAt = null;
-      next(); //Continue to join game;
-      return;
+  //Check if player is already in this game (on other device if logged in, or just other tab)
+  if (!res.locals.spectator) { //Different array for spectators and players
+    for (let player of game.players) {
+      if (player.id==req.session.playerId) { //Joining when already in the game (On other clients)
+        req.session.roomCode = code;
+        player.connectedClients++; //Add one to connected clients count
+        player.disconnectedAt = null;
+        next(); //Continue to join game;
+        return;
+      }
+    }
+  } else {
+    for (let player of game.spectators) {
+      if (player.id==req.session.playerId) {
+        req.session.roomCode = code;
+        player.connectedClients++;
+        player.disconnectedAt = null;
+        next();
+        return;
+      }
     }
   }
 
-  if (game.started) {
+  if (game.started && !res.locals.spectator) {
     req.session.error = {message: "Game has already started"}
     return res.redirect("/");
   }
 
-  let playerNum = game.players.length;
+  let playerNum = 0;
+  if (res.locals.spectator) playerNum = game.spectators.length;
+  else playerNum = game.players.length;
 
   let role = -1;
   let name = null;
   let pattern = null;
 
   if (req.session.loggedIn==true) {
-
-
-    let user = await User.findOne(
+    let user = await User.findOne( //Fetch user from database again
       {
         _id: req.session.user._id
       }, {
@@ -108,7 +128,7 @@ async function joinOrCreateGame(req, res, next) {
         pattern: 1
       });
 
-    if (user==null) { //Find if user exists
+    if (user==null) { //Return error if the user doesn't exist
       req.session.error = {message: "User doesn't exist"};
       return res.redirect('/login')
     }
@@ -128,27 +148,68 @@ async function joinOrCreateGame(req, res, next) {
     req.session.user = userObject;
 
     if (req.session.user.role==0 || req.session.user.role==null) {
-      req.session.error = {message: "Your account is not activated, please wait while an admin activates your account."};
+      req.session.error = {message: "Your account is not activated, please wait until an admin activates your account."};
       return res.redirect("/");
     }
+
     role = req.session.user.role;
     name = req.session.user.displayName;
     pattern = req.session.user.pattern;
   }
 
   let admin = false; //Check if admin access
-  if (game.players.length==0) admin = true;
+  if (!res.locals.spectator && game.players.length==0) admin = true;
   if (req.session.loggedIn && (req.session.user.role == 2 || req.session.user.role == 3)) admin = true; //Give admins and moderators admin access in any room they join
-
 
   let newPlayer = new Player(req.session.playerId, playerNum, game.nextPlayerNumber++, admin, role, name, pattern);
 
   //New player created
-  game.players.push(newPlayer); //Add new player object to room
+  if (res.locals.spectator) game.spectators.push(newPlayer); //Add player object to list of spectators
+  else game.players.push(newPlayer); //Add new player object to room
   req.session.roomCode = code;
 
   next();
 }
+
+app.get("/spectate/:roomCode", (req, res, next) => {
+  res.locals.spectator = true;
+  req.session.spectator = true;
+  next();
+});
+
+app.get("/spectate/:roomCode", joinOrCreateGame, (req, res) => {
+  let game = games[req.params.roomCode];
+
+  let playerNum = 0;
+  let admin = false;
+  let role = -1;
+  for (let player of game.spectators) {
+    if (player.id==req.session.playerId) {
+      playerNum = player.number;
+      admin = player.admin;
+      role = player.role;
+    }
+  }
+
+  res.render("gameAndWaitingRoom", {
+    playerNumber: playerNum,
+    width: game.settings.width,
+    height: game.settings.height,
+    disconnectTimeout: process.env.DISCONNECT_TIMEOUT,
+    room: game.room,
+    role: role,
+    admin: admin,
+    SERVER_ADDRESS: process.env.SERVER_ADDRESS,
+    gamemode: game.settings.gamemode,
+    spectator: true
+  });
+});
+
+app.get("/play/:roomCode", (req, res, next) => {
+  res.locals.spectator = false;
+  req.session.spectator = false;
+  next();
+});
 
 app.get("/play/:roomCode", joinOrCreateGame, (req, res) => {
   let game = games[req.params.roomCode];
@@ -173,7 +234,8 @@ app.get("/play/:roomCode", joinOrCreateGame, (req, res) => {
     role: role,
     admin: admin,
     SERVER_ADDRESS: process.env.SERVER_ADDRESS,
-    gamemode: game.settings.gamemode
+    gamemode: game.settings.gamemode,
+    spectator: false
   });
 });
 
@@ -363,9 +425,17 @@ io.on("connection", (socket) => {
     let game = games[gameCode]; //Find the game object
     if (game==null) return;
     let thisPlayer = null;
-    for (let player of game.players) {
-      if (player.id == socket.handshake.session.playerId) thisPlayer = player; //Find the player object for this player
+    if (!socket.handshake.session.spectator) {
+      for (let player of game.players) {
+        if (player.id == socket.handshake.session.playerId) thisPlayer = player; //Find the player object for this player
+      }
+    } else {
+      for (let player of game.spectators) {
+        if (player.id == socket.handshake.session.playerId) thisPlayer = player; //Find the player object for this play
+      }
     }
+
+    if (thisPlayer == null) return; // Player not found
 
     let currentPlayers = 0;
     for (let player of game.players) {
@@ -373,8 +443,21 @@ io.on("connection", (socket) => {
     }
 
     if (thisPlayer.connectedClients > 1) thisPlayer.connectedClients --; //If user is connected on multiple clients, then decrease the number of connectedClients
-
-    else if (currentPlayers <= 1) { //Case when user is only person in game (Close down game in this situation)
+    else if (socket.handshake.session.spectator) {
+      for (let i=0; i<game.spectators.length; i++) {
+        let player = game.spectators[i];
+        if (player.id == socket.handshake.session.playerId) {
+          game.spectators.splice(i, 1);
+          socket.leave("Room:"+gameCode+"Player:"+socket.handshake.session.playerId); //Leave socket room unique to playerId and gameCode
+          socket.leave("Room:"+gameCode); //Leave socket room unique to gameCode
+          for (let j=0; j<game.spectators.length; j++) { //Renumber remaining players
+            game.spectators[j].number = j;
+            io.to("Room:"+gameCode+"Player:"+game.spectators[j].id).emit("newPlayerNum", j);
+          }
+        }
+        io.to("Room:" + game.room).emit("playerList", game.updatePlayerNames()); //Updates playerlist
+      }
+    } else if (currentPlayers <= 1) { //Case when user is only person in game (Close down game in this situation)
       io.to("Room:"+gameCode).emit("gameEnd");
       for (let timeout of game.timeouts) clearTimeout(timeout);
       if (gameCode in games) delete games[gameCode];
@@ -382,9 +465,9 @@ io.on("connection", (socket) => {
 
     } else if (!game.started) { //Case when the game is in the waiting room phase (user leaves, but game carries on)
       for (let i=0; i<game.players.length; i++) {
-        player = game.players[i];
+        let player = game.players[i];
         if (player.id == socket.handshake.session.playerId) {
-          game.players.splice(i,1); //Remove player from list
+          game.players.splice(i, 1); //Remove player from list
           socket.leave("Room:"+gameCode+"Player:"+socket.handshake.session.playerId); //Leave socket room unique to playerId and gameCode
           socket.leave("Room:"+gameCode); //Leave socket room unique to gameCode
           for (let j=0; j<game.players.length; j++) { //Renumber remaining players

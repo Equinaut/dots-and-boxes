@@ -113,7 +113,7 @@ document.getElementById("board").addEventListener("mouseup", (mouseEvent) => {
       distanceY = dragEndPosition[1] - selectedPosition[1];
       if (validLine(selectedPosition, dragEndPosition)) createLine(selectedPosition, dragEndPosition);
 
-    } else if (currentTurn==playerNumber && dragEndPosition[0] >= 0 && dragEndPosition[1] >= 0) {
+    } else if (!spectator && currentTurn==playerNumber && dragEndPosition[0] >= 0 && dragEndPosition[1] >= 0) {
       if (settings.gamemode == 1) {
         if (dragEndPosition[0] < settings.width && dragEndPosition[1] < settings.height) {
           selected = true;
@@ -207,65 +207,85 @@ socket.on("gameState", (msg) => {
     document.getElementById("playerTurn").innerText="Waiting for game to start";
     document.getElementById("topBar").classList.remove("currentTurn");
     document.getElementById("topBar").classList.add("waitingForNewGame");
-  } else if (currentTurn == playerNumber) {
+  } else if (!spectator && currentTurn == playerNumber) {
     document.getElementById("playerTurn").innerText="Your turn";
     document.getElementById("topBar").classList.add("currentTurn");
     document.getElementById("topBar").classList.remove("waitingForNewGame");
   } else {
     selected = false;
-    document.getElementById("playerTurn").innerText="Waiting for other players";
+    document.getElementById("playerTurn").innerText=allPlayers[currentTurn].name+"'s turn";
+    if (allPlayers[currentTurn].name == null) document.getElementById("playerTurn").innerText="Waiting for other players to take their turn";
     document.getElementById("topBar").classList.remove("currentTurn");
     document.getElementById("topBar").classList.remove("waitingForNewGame");
   }
 });
 
 socket.on("playerList", (players) => { //When playerlist received from server
-  allPlayers = players; //Update players list
+  allPlayers = players[0]; //Update players list
+  allSpectators = players[1];
+
   let playerListElements = document.getElementsByClassName("playerList");
   for (let element of playerListElements) element.innerHTML = ""; //Clear list
 
   for (let interval of wheelTimers) clearInterval(interval);
 
-  for (let player of players) {
-    for (let element of playerListElements) {
-      //Create item for list
-      let newPlayerRowOuter = document.createElement("div");
-      let newPlayerRow = document.createElement("div");
-      let newPlayer = document.createElement("p");
-      newPlayer.innerHTML = (player.number+1)+". <span role=" + player.role + ">" + player.name + "</span>";
-      if (PHASE == 1) {
-        newPlayer.innerHTML = (player.number + 1) + ". <span role=" + player.role + ">" + player.name + "</span>" +
-                               " | " + (player.score || 0) + " point" + {true: "s", false: ""}[player.score != 1] +
-                               " | " + (player.wins || 0)  + " win"   + {true: "s", false: ""}[player.wins != 1];
-      }
 
-      //Add player number and name to p tag in row
-      newPlayerRow.classList.add("playerInner"); //Add the player class to this
-      newPlayerRowOuter.classList.add("playerOuter");
+  function addPlayerToPlayerList(player, element, spectator) {
+    if (spectator == null) spectator = false;
+    //Create item for list
+    let newPlayerRowOuter = document.createElement("div");
+    let newPlayerRow = document.createElement("div");
+    let newPlayer = document.createElement("p");
+    newPlayer.innerHTML = (player.number+1)+". <span role=" + player.role + ">" + player.name + "</span>";
+    if (PHASE == 1 && !spectator) {
+      newPlayer.innerHTML = (player.number + 1) + ". <span role=" + player.role + ">" + player.name + "</span>" +
+                             " | " + (player.score || 0) + " point" + {true: "s", false: ""}[player.score != 1] +
+                             " | " + (player.wins || 0)  + " win"   + {true: "s", false: ""}[player.wins != 1];
+    }
 
-      player.disconnectProgressWheelAngle = 0;
-      if (player.disconnectTimeout != null) {
-        newPlayer.classList.add("disconnected");
-        disconnectProgressWheelAngle = 360 - 360 * (player.disconnectTimeout / 10);
-        let interval = setInterval((player) => {
-          player.disconnectProgressWheelAngle += 1;
-          newPlayerRowOuter.style.setProperty("--angle", player.disconnectProgressWheelAngle+"deg");
-        }, settings.disconnectTimeout * 50 / 9, player);
+    //Add player number and name to p tag in row
+    newPlayerRow.classList.add("playerInner"); //Add the player class to this
+    newPlayerRowOuter.classList.add("playerOuter");
 
-        wheelTimers.push(interval);
-      }
-      newPlayerRowOuter.style.setProperty("--angle", player.disconnectProgressWheelAngle+"deg");
+    player.disconnectProgressWheelAngle = 0;
+    if (player.disconnectTimeout != null) {
+      newPlayer.classList.add("disconnected");
+      disconnectProgressWheelAngle = 360 - 360 * (player.disconnectTimeout / 10);
+      let interval = setInterval((player) => {
+        player.disconnectProgressWheelAngle += 1;
+        newPlayerRowOuter.style.setProperty("--angle", player.disconnectProgressWheelAngle+"deg");
+      }, settings.disconnectTimeout * 50 / 9, player);
 
-      if (PHASE == 1 && player.number == currentTurn) newPlayerRow.classList.add("currentTurn");
+      wheelTimers.push(interval);
+    }
+    newPlayerRowOuter.style.setProperty("--angle", player.disconnectProgressWheelAngle+"deg");
+
+    if (!spectator && PHASE == 1 && player.number == currentTurn) newPlayerRow.classList.add("currentTurn");
+
+    if (player.number == playerNumber) newPlayerRowOuter.classList.add("thisPlayer");
+
+    newPlayerRow.appendChild(newPlayer);
+    if (!spectator) {
       let colourSample = document.createElement("canvas");
       colourSample.classList.add("colourSample");
-
-      if (player.number == playerNumber) newPlayerRowOuter.classList.add("thisPlayer");
-
-      newPlayerRow.appendChild(newPlayer);
       newPlayerRow.appendChild(colourSample);
-      newPlayerRowOuter.appendChild(newPlayerRow);
-      element.appendChild(newPlayerRowOuter); //Adds elements to list
+    }
+    newPlayerRowOuter.appendChild(newPlayerRow);
+    element.appendChild(newPlayerRowOuter); //Adds elements to list
+  }
+
+
+  for (let player of players[0]) {
+    for (let element of playerListElements) addPlayerToPlayerList(player, element, false);
+  }
+  if (players[1].length > 0) {
+    for (let element of playerListElements) {
+      let spectateTitle = document.createElement("h2");
+      spectateTitle.innerText = "Spectators";
+      element.appendChild(spectateTitle);
+    }
+    for (let player of players[1]) {
+      for (let element of playerListElements) addPlayerToPlayerList(player, element, true);
     }
   }
 });

@@ -9,9 +9,11 @@ class Game {
 
     this.shapes = [];
     this.players = [];
+    this.spectators = [];
     this.currentTurn = 0;
     this.winCounted = false;
     this.firstPlayerTurn = this.currentTurn;
+
     this.nextPlayerNumber = 1; //First player number
 
     this.settings = {
@@ -193,8 +195,9 @@ class Game {
 
   }
 
-  updatePlayerNames() {
+  updatePlayerNames() { //Sends out an updated player list
     let players = [];
+    let spectators = [];
     for (let player of this.players) {
       let role = player.role;
       if (role==null) role = -1;
@@ -212,7 +215,24 @@ class Game {
           disconnectTimeout: disconnectTimeout
        });
     }
-    return players;
+    for (let player of this.spectators) {
+      let role = player.role;
+      if (role==null) role = -1;
+
+      let disconnectTimeout = null;
+      if (player.disconnectedAt != null) disconnectTimeout = process.env.DISCONNECT_TIMEOUT - (new Date() - player.disconnectedAt) / 1000;
+      spectators.push(
+        {
+          name: player.name || "Unknown player",
+          number: player.number || 0,
+          pattern: player.pattern,
+          score: player.score || 0,
+          wins: player.wins || 0,
+          role: role,
+          disconnectTimeout: disconnectTimeout
+       });
+    }
+    return [players, spectators];
   }
 }
 

@@ -91,7 +91,7 @@ function drawGrid() {
       }
     }
 
-    if (mouseDown && currentTurn==playerNumber) { //Draw example line when mouse is being dragged
+    if (!spectator && mouseDown && currentTurn==playerNumber) { //Draw example line when mouse is being dragged
       let dragEndPosition = [Math.floor(mouseX/SQUARE_SIZE), Math.floor(mouseY/SQUARE_SIZE)]; //End position of mouse drag
       if (validLine(dragStartPosition, dragEndPosition)) {
         canvasContext.lineWidth = 8;
@@ -116,8 +116,7 @@ function drawGrid() {
         canvasContext.fill(); //Draws dots for each dot on grid
       }
     }
-
-    if (mouseDown && currentTurn==playerNumber) { //Draw example line when mouse is being dragged
+    if (!spectator && mouseDown && currentTurn==playerNumber) { //Draw example line when mouse is being dragged
       let y = Math.floor(mouseY /  SQUARE_SIZE / (Math.sqrt(3) / 2));
       let dragEndPosition = [Math.floor((mouseX / SQUARE_SIZE) - (settings.width - y) / 2 + 0.5), y];
 
